@@ -392,17 +392,17 @@ public abstract class ActionImpl implements Action {
 
 	protected final Map<String, String> packageRenames;
 	protected final Map<String, String> binaryPackageRenames;
-	
+
 	protected Map<String, String> getPackageRenames() {
 		return packageRenames;
 	}
-	
+
 	protected final Map<String, String> packageVersions;
 	
 	protected Map<String, String> getPackageVersions() {
 		return packageVersions;
 	}
-	
+
 	/**
 	 * Replace a single package according to the package rename rules.
 	 * 

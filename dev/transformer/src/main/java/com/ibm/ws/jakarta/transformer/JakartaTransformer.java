@@ -171,6 +171,7 @@ public class JakartaTransformer {
     public static final String DEFAULT_SELECTIONS_REFERENCE = "jakarta-selections.properties";
     public static final String DEFAULT_RENAMES_REFERENCE = "jakarta-renames.properties";
     public static final String DEFAULT_VERSIONS_REFERENCE = "jakarta-versions.properties";
+    public static final String DEFAULT_BUNDLES_REFERENCE = "jakarta-bundles.properties";
 
     public static enum TransformType {
         CLASS, MANIFEST, FEATURE, SERVICE_CONFIG, XML,
@@ -192,7 +193,9 @@ public class JakartaTransformer {
         RULES_RENAMES("tr", "renames", "Transformation package renames URL",
         	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
         RULES_VERSIONS("tv", "versions", "Transformation package versions URL",
-        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
+            OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
+        RULES_BUNDLES("tb", "bundles", "Transformation bundle updates URL",
+            OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
 
         INVERT("i", "invert", "Invert transformation rules",
            	!OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
@@ -416,7 +419,6 @@ public class JakartaTransformer {
 
     	public boolean invert;
     	public Map<String, String> packageRenames;
-
     	public Map<String, String> packageVersions;
 
     	public TransformType transformType;
@@ -449,6 +451,7 @@ public class JakartaTransformer {
     		UTF8Properties selectionProperties = loadProperties(AppOption.RULES_SELECTIONS, DEFAULT_SELECTIONS_REFERENCE);
     		UTF8Properties renameProperties = loadProperties(AppOption.RULES_RENAMES, DEFAULT_RENAMES_REFERENCE);
     		UTF8Properties versionProperties = loadProperties(AppOption.RULES_VERSIONS, DEFAULT_VERSIONS_REFERENCE);
+    		UTF8Properties bundleProperties = loadProperties(AppOption.RULES_BUNDLES, DEFAULT_BUNDLES_REFERENCE);
 
         	invert = hasOption(AppOption.INVERT);
 

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -380,7 +379,7 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 				if ( matchStart == -1 ) {
 					break;
 				}
-				
+
 				if ( !isTrueMatch(text, textLimit, matchStart, keyLen) ) {
 					lastMatchEnd = matchStart + keyLen;
 					continue;
@@ -514,16 +513,16 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
         		return text;   // Syntax error - returning original text
         	}
         }
-		
+
     	//String oldVersion = packageText.substring(versionBeginIndex, versionEndIndex+1);
     	//verbose("old version[ %s ] new version[ %s]\n", oldVersion, newVersion);
-    	
+
     	String head = text.substring(0, versionBeginIndex);
     	String tail = text.substring(versionEndIndex+1);
-    	
+
     	String newText = head + newVersion + tail;
     	//verbose("Old [%s] New [%s]\n", text , newText);
-		
+
 		return newText;
 	}
 	
