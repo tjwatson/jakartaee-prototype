@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.ibm.ws.jakarta.transformer.action.BundleData;
+import com.ibm.ws.jakarta.transformer.action.impl.BundleDataImpl;
+
 import aQute.lib.utf8properties.UTF8Properties;
 
 public class JakartaTransformProperties {
@@ -74,12 +77,22 @@ public class JakartaTransformProperties {
 		}
 		return inverseProperties;
 	}
-	
+
 	public static Map<String, String> getPackageVersions(UTF8Properties versionProperties) {
 		Map<String, String> packageVersions = new HashMap<String, String>( versionProperties.size() );
 		for ( Map.Entry<Object, Object> versionEntry : versionProperties.entrySet() ) {
 			packageVersions.put( (String) versionEntry.getKey(), (String) versionEntry.getValue() );
 		}
 		return packageVersions;
+	}
+
+	public static Map<String, BundleData> getBundleUpdates(UTF8Properties updateProperties) {
+		Map<String, BundleData> bundleUpdates = new HashMap<String, BundleData>( updateProperties.size() );
+		for ( Map.Entry<Object, Object> updateEntry : updateProperties.entrySet() ) {
+			bundleUpdates.put(
+				(String) updateEntry.getKey(),
+				new BundleDataImpl( (String) updateEntry.getValue() ) );
+		}
+		return bundleUpdates;
 	}
 }

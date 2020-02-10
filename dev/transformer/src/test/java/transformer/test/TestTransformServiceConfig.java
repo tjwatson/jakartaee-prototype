@@ -79,7 +79,9 @@ public class TestTransformServiceConfig {
 
 	public ServiceConfigActionImpl getJakartaServiceAction() {
 		if ( jakartaServiceAction == null ) {
-			jakartaServiceAction = new ServiceConfigActionImpl( getIncludes(), getExcludes(), getPackageRenames(), null );
+			jakartaServiceAction = new ServiceConfigActionImpl(
+				getIncludes(), getExcludes(),
+				getPackageRenames(), null, null );
 		}
 		return jakartaServiceAction;
 	}
@@ -87,7 +89,9 @@ public class TestTransformServiceConfig {
 	public ServiceConfigActionImpl getJavaxServiceAction() {
 		if ( javaxServiceAction == null ) {
 			Map<String, String> invertedRenames = JakartaTransformProperties.invert( getPackageRenames() );
-			javaxServiceAction = new ServiceConfigActionImpl( getIncludes(), getExcludes(), invertedRenames, null );
+			javaxServiceAction = new ServiceConfigActionImpl(
+				getIncludes(), getExcludes(),
+				invertedRenames, null, null );
 		}
 		return javaxServiceAction;
 	}

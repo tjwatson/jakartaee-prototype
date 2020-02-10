@@ -14,6 +14,7 @@ import java.util.zip.ZipOutputStream;
 import com.ibm.ws.jakarta.transformer.JakartaTransformException;
 import com.ibm.ws.jakarta.transformer.action.Action;
 import com.ibm.ws.jakarta.transformer.action.ArchiveChanges;
+import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.action.ClassAction;
 import com.ibm.ws.jakarta.transformer.action.JarAction;
 import com.ibm.ws.jakarta.transformer.action.ManifestAction;
@@ -29,16 +30,18 @@ public class JarActionImpl extends ActionImpl implements JarAction {
 	}
 
 	public JarActionImpl(Set<String> includes, Set<String> excludes, Map<String, String> renames,
-			Map<String, String> versions) {
-		super(includes, excludes, renames, versions);
+			Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
+		super(includes, excludes, renames, versions, bundleUpdates);
 	}
 
 	public JarActionImpl(
 		PrintStream logStream, boolean isTerse, boolean isVerbose,
 		Set<String> includes, Set<String> excludes, Map<String, String> renames,
-		Map<String, String> versions) {
+		Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
 
-		super(logStream, isTerse, isVerbose, includes, excludes, renames, versions);
+		super(logStream, isTerse, isVerbose,
+			   includes, excludes,
+			   renames, versions, bundleUpdates);
 	}
 
 	//

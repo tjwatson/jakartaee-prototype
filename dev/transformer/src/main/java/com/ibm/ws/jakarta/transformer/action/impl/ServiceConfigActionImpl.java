@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ibm.ws.jakarta.transformer.JakartaTransformException;
+import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.action.ServiceConfigAction;
 import com.ibm.ws.jakarta.transformer.util.ByteData;
 
@@ -37,16 +38,18 @@ public class ServiceConfigActionImpl extends ActionImpl implements ServiceConfig
 	}
 
 	public ServiceConfigActionImpl(Set<String> includes, Set<String> excludes, Map<String, String> renames,
-			Map<String, String> versions) {
-		super(includes, excludes, renames, versions);
+			Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
+		super(includes, excludes, renames, versions, bundleUpdates);
 	}
 
 	public ServiceConfigActionImpl(
 		PrintStream logStream, boolean isTerse, boolean isVerbose,
 		Set<String> includes, Set<String> excludes, Map<String, String> renames,
-		Map<String, String> versions) {
+		Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
 
-		super(logStream, isTerse, isVerbose, includes, excludes, renames, versions);
+		super(logStream, isTerse, isVerbose,
+			  includes, excludes,
+			  renames, versions, bundleUpdates);
 	}
 
 	//

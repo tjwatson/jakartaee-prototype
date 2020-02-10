@@ -86,11 +86,6 @@ public class TestTransformClass {
 		return packageRenames;
 	}
 
-	protected Map<String, String> packageVersions = null;
-	public Map<String, String> getPackageVersions() {
-		return packageVersions;
-	}
-	
 	public ClassLoader getClassLoader_null() {
 		return getClass().getClassLoader();
 	}
@@ -100,7 +95,9 @@ public class TestTransformClass {
 
 	public JarActionImpl getJakartaJarAction() {
 		if ( jakartaJarAction == null ) {
-			jakartaJarAction = new JarActionImpl( getIncludes(), getExcludes(), getPackageRenames(), getPackageVersions() );
+			jakartaJarAction = new JarActionImpl(
+				getIncludes(), getExcludes(),
+				getPackageRenames(), null, null );
 		}
 		return jakartaJarAction;
 	}
@@ -108,7 +105,9 @@ public class TestTransformClass {
 	public JarActionImpl getJavaxJarAction() {
 		if ( javaxJarAction == null ) {
 			Map<String, String> invertedRenames = JakartaTransformProperties.invert( getPackageRenames() );
-			javaxJarAction = new JarActionImpl( getIncludes(), getExcludes(), invertedRenames, getPackageVersions());
+			javaxJarAction = new JarActionImpl(
+				getIncludes(), getExcludes(),
+				invertedRenames, null, null );
 		}
 		return javaxJarAction;
 	}

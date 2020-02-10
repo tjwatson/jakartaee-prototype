@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ibm.ws.jakarta.transformer.JakartaTransformException;
+import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.action.ClassAction;
 import com.ibm.ws.jakarta.transformer.util.ByteData;
 import com.ibm.ws.jakarta.transformer.util.FileUtils;
@@ -98,16 +99,18 @@ public class ClassActionImpl extends ActionImpl implements ClassAction {
 	}
 
 	public ClassActionImpl(Set<String> includes, Set<String> excludes, Map<String, String> renames,
-			Map<String, String> versions) {
-		super(includes, excludes, renames, versions);
+			Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
+		super(includes, excludes, renames, versions, bundleUpdates);
 	}
 
 	public ClassActionImpl(
 		PrintStream logStream, boolean isTerse, boolean isVerbose,
 		Set<String> includes, Set<String> excludes, Map<String, String> renames,
-		Map<String, String> versions) {
+		Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
 
-		super(logStream, isTerse, isVerbose, includes, excludes, renames, versions);
+		super(logStream, isTerse, isVerbose,
+			  includes, excludes,
+			  renames, versions, bundleUpdates);
 	}
 
 	//

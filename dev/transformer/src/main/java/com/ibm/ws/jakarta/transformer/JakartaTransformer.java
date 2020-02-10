@@ -23,6 +23,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.action.ClassAction;
 import com.ibm.ws.jakarta.transformer.action.ClassChanges;
 import com.ibm.ws.jakarta.transformer.action.JarAction;
@@ -420,6 +421,7 @@ public class JakartaTransformer {
     	public boolean invert;
     	public Map<String, String> packageRenames;
     	public Map<String, String> packageVersions;
+    	public Map<String, BundleData> bundleUpdates;
 
     	public TransformType transformType;
 
@@ -447,11 +449,11 @@ public class JakartaTransformer {
             }
     	}
 
-    	protected boolean setRules() throws IOException, URISyntaxException {
+    	protected boolean setRules() throws IOException, URISyntaxException, IllegalArgumentException {
     		UTF8Properties selectionProperties = loadProperties(AppOption.RULES_SELECTIONS, DEFAULT_SELECTIONS_REFERENCE);
     		UTF8Properties renameProperties = loadProperties(AppOption.RULES_RENAMES, DEFAULT_RENAMES_REFERENCE);
     		UTF8Properties versionProperties = loadProperties(AppOption.RULES_VERSIONS, DEFAULT_VERSIONS_REFERENCE);
-    		UTF8Properties bundleProperties = loadProperties(AppOption.RULES_BUNDLES, DEFAULT_BUNDLES_REFERENCE);
+    		UTF8Properties updateProperties = loadProperties(AppOption.RULES_BUNDLES, DEFAULT_BUNDLES_REFERENCE);
 
         	invert = hasOption(AppOption.INVERT);
 
@@ -481,6 +483,13 @@ public class JakartaTransformer {
         		info("Package versions will not be updated");
         	}
 
+        	if ( updateProperties != null ) {
+        		bundleUpdates = JakartaTransformProperties.getBundleUpdates(updateProperties);
+        		// throws IllegalArgumentException
+        	} else {
+        		info("Bundle identities will not be updated");
+        	}
+        	
         	return ( packageRenames != null );
     	}
 
@@ -523,6 +532,31 @@ public class JakartaTransformer {
     		} else {
     			for ( Map.Entry<String, String> versionEntry : packageVersions.entrySet() ) {
         			logStream.println("  [ " + versionEntry.getKey() + " ]: [ " + versionEntry.getValue() + " ]");
+    			}
+    		}
+
+    		logStream.println("Bundle Updates:");
+    		if ( bundleUpdates.isEmpty() ) {
+    			logStream.println("  [ ** NONE ** ]");
+    		} else {
+    			for ( Map.Entry<String, BundleData> updateEntry : bundleUpdates.entrySet() ) {
+    				BundleData updateData = updateEntry.getValue();
+
+    				logStream.println("  [ " + updateEntry.getKey() + " ]: [ " + updateData.getSymbolicName() + " ]");
+
+        			logStream.println("    [ Version ]: [ " + updateData.getVersion() + " ]");
+
+        			if ( updateData.getAddName() ) {
+        				logStream.println("    [ Name ]: [ " + BundleData.ADDITIVE_CHAR + updateData.getName() + " ]");
+        			} else {
+        				logStream.println("    [ Name ]: [ " + updateData.getName() + " ]");
+        			}
+
+        			if ( updateData.getAddDescription() ) {
+        				logStream.println("    [ Description ]: [ " + BundleData.ADDITIVE_CHAR + updateData.getDescription() + " ]");
+        			} else {
+        				logStream.println("    [ Description ]: [ " + updateData.getDescription() + " ]");
+        			}
     			}
     		}
     	}
@@ -669,7 +703,8 @@ public class JakartaTransformer {
 
     		ClassAction classAction = new ClassActionImpl(
     			getInfoStream(), isTerse, isVerbose,
-    			includes, excludes, packageRenames, packageVersions);
+    			includes, excludes,
+    			packageRenames, packageVersions, bundleUpdates);
 
     		classAction.apply(inputPath, inputStream, intLength, outputStream);
 
@@ -702,7 +737,8 @@ public class JakartaTransformer {
 
     		ServiceConfigAction configAction = new ServiceConfigActionImpl(
     			getInfoStream(), isTerse, isVerbose,
-    			includes, excludes, packageRenames, packageVersions);
+    			includes, excludes,
+    			packageRenames, packageVersions, bundleUpdates);
 
     		configAction.apply(inputPath, inputStream, intLength, outputStream);
 
@@ -726,7 +762,7 @@ public class JakartaTransformer {
     		ManifestAction manifestAction = new ManifestActionImpl(
     			getInfoStream(), isTerse, isVerbose,
     			includes, excludes, packageRenames, ManifestActionImpl.IS_MANIFEST,
-    			packageVersions);
+    			packageVersions, bundleUpdates);
 
     		manifestAction.apply(inputPath, inputStream, intLength, outputStream);
 
@@ -750,7 +786,7 @@ public class JakartaTransformer {
         	ManifestAction featureAction = new ManifestActionImpl(
         		getInfoStream(), isTerse, isVerbose,
         		includes, excludes, packageRenames, ManifestActionImpl.IS_FEATURE,
-        		packageVersions);
+        		packageVersions, bundleUpdates);
 
         	featureAction.apply(inputPath, inputStream, intLength, outputStream);
 
@@ -776,7 +812,8 @@ public class JakartaTransformer {
 
     		JarAction jarAction = new JarActionImpl(
             	getInfoStream(), isTerse, isVerbose,
-            	includes, excludes, packageRenames, packageVersions);
+            	includes, excludes,
+            	packageRenames, packageVersions, bundleUpdates);
 
             jarAction.apply(inputPath, inputStream, outputPath, outputStream);
 

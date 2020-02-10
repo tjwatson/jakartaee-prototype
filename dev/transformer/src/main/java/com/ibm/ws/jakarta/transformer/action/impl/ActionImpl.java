@@ -13,6 +13,7 @@ import java.util.Set;
 import com.ibm.ws.jakarta.transformer.JakartaTransformException;
 import com.ibm.ws.jakarta.transformer.JakartaTransformProperties;
 import com.ibm.ws.jakarta.transformer.action.Action;
+import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.util.ByteData;
 import com.ibm.ws.jakarta.transformer.util.FileUtils;
 import com.ibm.ws.jakarta.transformer.util.InputStreamData;
@@ -59,10 +60,11 @@ public abstract class ActionImpl implements Action {
 		this.excludedTail = null;
 		this.excludedAny = null;
 
-		this.packageRenames = root.getPackageRenames();
+		this.packageRenames = null;
 		this.binaryPackageRenames = null;
-		
-		this.packageVersions = root.getPackageVersions();
+
+		this.packageVersions = null;
+		this.bundleUpdates = null;
 
 		//
 
@@ -101,16 +103,18 @@ public abstract class ActionImpl implements Action {
 	public static final boolean IS_TERSE = true;
 	public static final boolean IS_VERBOSE = true;
 
-	public ActionImpl(Set<String> includes, Set<String> excludes, Map<String, String> renames,
-			          Map<String, String> versions) {
+	public ActionImpl(
+		Set<String> includes, Set<String> excludes, Map<String, String> renames,
+		Map<String, String> versions,
+		Map<String, BundleData> bundleUpdates) {
 		this(NULL_STREAM, !IS_TERSE, !IS_VERBOSE,
-			 includes, excludes, renames, versions);
+			 includes, excludes, renames, versions, bundleUpdates);
 	}
 
 	public ActionImpl(
 		PrintStream logStream, boolean isTerse, boolean isVerbose,
 		Set<String> includes, Set<String> excludes, Map<String, String> renames,
-		Map<String, String> versions) {
+		Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
 
 		this.root = null;
 		this.parent = null;
@@ -148,28 +152,30 @@ public abstract class ActionImpl implements Action {
 			String finalName = renameEntry.getValue();
 
 			useRenames.put(initialName, finalName);
-			
+
 			String initialBinaryName = initialName.replace('.',  '/');
 			String finalBinaryName = finalName.replace('.',  '/');
 
 			useBinaryRenames.put(initialBinaryName, finalBinaryName);
-		}		
+		}
 		this.packageRenames = useRenames;
 		this.binaryPackageRenames = useBinaryRenames;
-		
+
 		Map<String, String> useVersions;
 		if (versions != null ) {
-			useVersions = new HashMap<String, String>( versions.size() );
-
-			for ( Map.Entry<String, String> entry : versions.entrySet() ) {
-				String initialName = entry.getKey();
-				String finalName = entry.getValue();
-				useVersions.put(initialName, finalName);
-			}
+			useVersions = new HashMap<String, String>(versions);
 		} else {
 		    useVersions = Collections.emptyMap();
         }
 		this.packageVersions = useVersions;
+
+		Map<String, BundleData> useBundleUpdates;
+		if ( bundleUpdates != null ) {
+			useBundleUpdates = new HashMap<String, BundleData>(bundleUpdates);
+		} else {
+			useBundleUpdates = Collections.emptyMap();
+		}
+		this.bundleUpdates = useBundleUpdates;
 		
 		this.unchangedBinaryTypes = new HashSet<>();
 		this.changedBinaryTypes = new HashMap<>();
@@ -981,20 +987,32 @@ public abstract class ActionImpl implements Action {
 	}
 
 	//
+	
+	private final Map<String, BundleData> bundleUpdates;
+
+	public BundleData getBundleUpdate(String symbolicName) {
+		if ( root != null ) {
+			return root.getBundleUpdate(symbolicName);
+		} else {
+			return bundleUpdates.get(symbolicName);
+		}
+	}
+
+	//
 
 	private byte[] inputBuffer;
 
 	protected byte[] getInputBuffer() {
-		if ( parent != null ) {
-			return parent.getInputBuffer();
+		if ( root != null ) {
+			return root.getInputBuffer();
 		} else {
 			return inputBuffer;
 		}
 	}
 
 	protected void setInputBuffer(byte[] inputBuffer) {
-		if ( parent != null ) {
-			parent.setInputBuffer(inputBuffer);
+		if ( root != null ) {
+			root.setInputBuffer(inputBuffer);
 		} else {
 			this.inputBuffer = inputBuffer;
 		}

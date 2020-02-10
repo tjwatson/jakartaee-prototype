@@ -1,0 +1,97 @@
+Manifest-Version: 1.0
+Build-Identifier: SNAPSHOT-Wed Jan 08 03:36:51 GMT 2020
+Bundle-Copyright: Copyright (c) 1999, 2019 IBM Corporation and others.
+  All rights reserved. This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v1.0 wh
+ ich accompanies this distribution, and is available at http://www.ecl
+ ipse.org/legal/epl-v10.html.
+Bundle-Description: WAS WebContainer 8.1 with Servlet 4.0 support
+Bundle-License: Eclipse Public License; url=https://www.eclipse.org/le
+ gal/epl-v10.html
+Bundle-ManifestVersion: 2
+Bundle-Name: WAS WebContainer
+Bundle-SCM: connection=scm:git:https://github.com/OpenLiberty/open-lib
+ erty.git, developerConnection=scm:git:https://github.com:OpenLiberty/
+ open-liberty.git, url=https://github.com/OpenLiberty/open-liberty/tre
+ e/master
+Bundle-SymbolicName: com.ibm.ws.webcontainer.servlet.4.0
+Bundle-Vendor: IBM
+Bundle-Version: 1.0.36.cl200120200108-0300
+Created-By: 11.0.2 (Eclipse OpenJ9)
+Export-Package: com.ibm.websphere.servlet40;version="1.0.16";uses:="co
+ m.ibm.websphere.servlet31.request,com.ibm.websphere.servlet31.respons
+ e,com.ibm.wsspi.http",com.ibm.ws.webcontainer40.facade;version="1.0";
+ uses:="com.ibm.ws.webcontainer31.facade,com.ibm.wsspi.webcontainer.se
+ rvlet,javax.servlet",com.ibm.ws.webcontainer40.osgi.container.config;
+ version="1.0";uses:="com.ibm.ws.container.service.config,com.ibm.ws.j
+ avaee.dd.web,com.ibm.ws.resource,com.ibm.ws.webcontainer.osgi.contain
+ er.config,com.ibm.wsspi.adaptable.module",com.ibm.ws.webcontainer40.o
+ sgi.osgi;version="1.0.16",com.ibm.ws.webcontainer40.osgi.request;vers
+ ion="1.0.16";uses:="com.ibm.websphere.servlet40,com.ibm.ws.webcontain
+ er31.osgi.request,com.ibm.wsspi.http",com.ibm.ws.webcontainer40.osgi.
+ response;version="1.0.16";uses:="com.ibm.websphere.servlet.request,co
+ m.ibm.websphere.servlet40,com.ibm.ws.webcontainer31.osgi.response,com
+ .ibm.wsspi.http",com.ibm.ws.webcontainer40.osgi.srt;version="1.0.16";
+ uses:="com.ibm.ws.webcontainer.srt,com.ibm.ws.webcontainer31.osgi.srt
+ ",com.ibm.ws.webcontainer40.osgi.webapp;version="1.0.16";uses:="com.i
+ bm.ejs.ras,com.ibm.websphere.csi,com.ibm.ws.container.service.metadat
+ a,com.ibm.ws.managedobject,com.ibm.ws.webcontainer.osgi.webapp,com.ib
+ m.ws.webcontainer.webapp,com.ibm.ws.webcontainer31.osgi.webapp,com.ib
+ m.wsspi.injectionengine,com.ibm.wsspi.webcontainer,com.ibm.wsspi.webc
+ ontainer.servlet,javax.servlet,javax.servlet.http",com.ibm.ws.webcont
+ ainer40.servlet;version="1.0";uses:="com.ibm.ws.webcontainer.servlet,
+ com.ibm.ws.webcontainer.webapp,com.ibm.wsspi.webcontainer.servlet,jav
+ ax.servlet,javax.servlet.http",com.ibm.ws.webcontainer40.srt;version=
+ "1.0.16";uses:="com.ibm.websphere.servlet.request,com.ibm.websphere.s
+ ervlet.response,com.ibm.ws.webcontainer.webapp,com.ibm.ws.webcontaine
+ r31.srt,com.ibm.ws.webcontainer40.osgi.srt,com.ibm.ws.webcontainer40.
+ osgi.webapp,javax.servlet.http",com.ibm.ws.webcontainer40.srt.http;ve
+ rsion="1.0.16";uses:="com.ibm.ws.webcontainer40.srt,com.ibm.wsspi.gen
+ ericbnf,com.ibm.wsspi.http.ee8,javax.servlet.http",com.ibm.wsspi.webc
+ ontainer40.util;version="1.0";uses:="com.ibm.wsspi.webcontainer.servl
+ et,com.ibm.wsspi.webcontainer.util"
+Import-Package: javax.servlet;version="[2.6,3)",javax.servlet.http;ver
+ sion="[2.6,3)",com.ibm.ejs.ras;version="[1.0,2)",com.ibm.websphere.cs
+ i;version="[4.0,5)",com.ibm.websphere.ras;version="[1.2,2)",com.ibm.w
+ ebsphere.servlet.request;version="[1.1,2)",com.ibm.websphere.servlet.
+ response;version="[2.0,3)",com.ibm.websphere.servlet31.request;versio
+ n="[1.0,2)",com.ibm.websphere.servlet31.response;version="[1.0,2)",co
+ m.ibm.websphere.servlet40;version="[1.0,2)",com.ibm.ws.container.serv
+ ice.app.deploy;version="[2.2,3)",com.ibm.ws.container.service.config;
+ version="[2.0,3)",com.ibm.ws.container.service.metadata;version="[1.0
+ ,2)",com.ibm.ws.ffdc;version="[1.0,2)",com.ibm.ws.javaee.dd.web;versi
+ on="[1.2,2)",com.ibm.ws.javaee.dd.web.common;version="[1.3,2)",com.ib
+ m.ws.managedobject;version="[1.0,2)",com.ibm.ws.resource;version="[1.
+ 1,2)",com.ibm.ws.session;version="[2.0,3)",com.ibm.ws.webcontainer.co
+ re;version="[1.1,2)",com.ibm.ws.webcontainer.extension;version="[2.0,
+ 3)",com.ibm.ws.webcontainer.osgi.container.config;version="[1.0,2)",c
+ om.ibm.ws.webcontainer.osgi.webapp;version="[1.0,2)",com.ibm.ws.webco
+ ntainer.servlet;version="[2.0,3)",com.ibm.ws.webcontainer.session;ver
+ sion="[2.0,3)",com.ibm.ws.webcontainer.srt;version="[1.0,2)",com.ibm.
+ ws.webcontainer.util;version="[1.2,2)",com.ibm.ws.webcontainer.webapp
+ ;version="[1.0,2)",com.ibm.ws.webcontainer31.facade;version="[1.2,2)"
+ ,com.ibm.ws.webcontainer31.osgi.request;version="[1.0,2)",com.ibm.ws.
+ webcontainer31.osgi.response;version="[1.0,2)",com.ibm.ws.webcontaine
+ r31.osgi.srt;version="[1.0,2)",com.ibm.ws.webcontainer31.osgi.webapp;
+ version="[1.0,2)",com.ibm.ws.webcontainer31.srt;version="[1.0,2)",com
+ .ibm.ws.webcontainer40.facade;version="[1.0,2)",com.ibm.ws.webcontain
+ er40.osgi.srt;version="[1.0,2)",com.ibm.ws.webcontainer40.osgi.webapp
+ ;version="[1.0,2)",com.ibm.ws.webcontainer40.srt.http;version="[1.0,2
+ )",com.ibm.wsspi.adaptable.module;version="[1.0,2)",com.ibm.wsspi.gen
+ ericbnf;version="[1.0,2)",com.ibm.wsspi.http;version="[2.0,3)",com.ib
+ m.wsspi.http.channel.values;version="[1.0,2)",com.ibm.wsspi.http.ee8;
+ version="[4.1,5)",com.ibm.wsspi.injectionengine;version="[3.0,4)",com
+ .ibm.wsspi.session;version="[1.1,2)",com.ibm.wsspi.webcontainer;versi
+ on="[1.5,2)",com.ibm.wsspi.webcontainer.logging;version="[1.1,2)",com
+ .ibm.wsspi.webcontainer.servlet;version="[3.0,4)",com.ibm.wsspi.webco
+ ntainer.util;version="[1.1,2)",com.ibm.wsspi.webcontainer.webapp;vers
+ ion="[2.0,3)",com.ibm.wsspi.webcontainer31;version="[1.0,2)",javax.se
+ rvlet.resources;version="[2.6,3)",com.ibm.ws.webcontainer.resources;v
+ ersion="[1.1,2)"
+Private-Package: com.ibm.ws.webcontainer40.resources,com.ibm.wsspi.web
+ container40;version="1.0"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+Tool: Bnd-4.1.0.201810181252
+WLP-ServerName: IBM WebSphere Application Server
+WLP-ServerVersion: ${liberty.beta.version}
+

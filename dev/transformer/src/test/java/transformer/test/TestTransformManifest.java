@@ -19,7 +19,9 @@ import org.junit.jupiter.api.Test;
 
 import com.ibm.ws.jakarta.transformer.JakartaTransformException;
 import com.ibm.ws.jakarta.transformer.JakartaTransformProperties;
+import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.action.impl.ActionImpl;
+import com.ibm.ws.jakarta.transformer.action.impl.BundleDataImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.ManifestActionImpl;
 import com.ibm.ws.jakarta.transformer.util.InputStreamData;
 
@@ -91,6 +93,31 @@ public class TestTransformManifest {
 		return packageVersions;
 	}
 
+	public static final String WEBCONTAINER_SYMBOLIC_NAME =
+		"com.ibm.ws.webcontainer";
+	public static final String WEBCONTAINER_BUNDLE_TEXT =
+		"com.ibm.ws.webcontainer.jakarta,2.0,+\" Jakarta\",+\"; Jakarta enabled\"";
+
+	public static final String[][] WEBCONTAINER_BUNDLE_OUTPUT = new String[][] {
+		{ "Bundle-SymbolicName: ", "com.ibm.ws.webcontainer.jakarta" },
+		{ "Bundle-Version: ", "2.0" },
+		{ "Bundle-Name: ", "WAS WebContainer Jakarta"},
+		{ "Bundle-Description: ", "WAS WebContainer 8.0 with Servlet 3.0 support; Jakarta enabled" }
+	};
+
+	public static final BundleData WEBCONTAINER_BUNDLE_DATA =
+		new BundleDataImpl(WEBCONTAINER_BUNDLE_TEXT);
+
+	protected Map<String, BundleData> bundleUpdates;
+
+	public Map<String, BundleData> getBundleUpdates() {
+		if ( bundleUpdates == null ) {
+			bundleUpdates = new HashMap<String, BundleData>();
+			bundleUpdates.put(WEBCONTAINER_SYMBOLIC_NAME, WEBCONTAINER_BUNDLE_DATA);
+		}
+		return bundleUpdates;
+	}
+	
 	public ManifestActionImpl jakartaManifestAction;
 	public ManifestActionImpl javaxManifestAction;
 
@@ -99,7 +126,8 @@ public class TestTransformManifest {
 			jakartaManifestAction =
 				new ManifestActionImpl(
 					System.out, !ActionImpl.IS_TERSE, ActionImpl.IS_VERBOSE,
-					getIncludes(), getExcludes(), getPackageRenames(), getPackageVersions() );
+					getIncludes(), getExcludes(),
+					getPackageRenames(), getPackageVersions(), getBundleUpdates() );
 		}
 		return jakartaManifestAction;
 	}
@@ -120,8 +148,9 @@ public class TestTransformManifest {
 			jakartaFeatureAction =
 				new ManifestActionImpl(
 					System.out, !ActionImpl.IS_TERSE, ActionImpl.IS_VERBOSE,
-					getIncludes(), getExcludes(), getPackageRenames(), ManifestActionImpl.IS_FEATURE,
-					getPackageVersions());
+					getIncludes(), getExcludes(),
+					getPackageRenames(), ManifestActionImpl.IS_FEATURE,
+					getPackageVersions(), getBundleUpdates() );
 		}
 		return jakartaFeatureAction;
 	}
@@ -130,8 +159,9 @@ public class TestTransformManifest {
 		if ( javaxFeatureAction == null ) {
 			Map<String, String> invertedRenames = JakartaTransformProperties.invert( getPackageRenames() );
 			javaxFeatureAction = new ManifestActionImpl(
-				getIncludes(), getExcludes(), invertedRenames, ManifestActionImpl.IS_FEATURE,
-				getPackageVersions());   // versions not inverted );
+				getIncludes(), getExcludes(),
+				invertedRenames, ManifestActionImpl.IS_FEATURE,
+				getPackageVersions(), getBundleUpdates() );   // versions not inverted );
 		}
 		return javaxFeatureAction;
 	}
@@ -167,6 +197,12 @@ public class TestTransformManifest {
 	public void testTransform(String inputPath, Occurrences[] outputOccurrences, boolean isManifest)
 		throws JakartaTransformException, IOException {
 
+		testTransform(inputPath, outputOccurrences, null, isManifest);
+	}
+
+	public void testTransform(String inputPath, Occurrences[] outputOccurrences, String[][] identityUpdates, boolean isManifest)
+		throws JakartaTransformException, IOException {
+
 		System.out.println("Read [ " + inputPath + " ]");
 		InputStream manifestInput = TestUtils.getResourceStream(inputPath); // throws IOException
 
@@ -194,7 +230,91 @@ public class TestTransformManifest {
 			Assertions.assertEquals(expected, actual, tag);
 		}
 
+		System.out.println("Verify identity update [ " + inputPath + " ]");
+
+		if ( identityUpdates != null ) {
+			String errorMessage = validate(manifestLines, identityUpdates);
+			if ( errorMessage != null ) {
+				System.out.println("Bundle identity update failure: " + errorMessage);
+				Assertions.assertNull(errorMessage, "Bundle identity update failure");
+			}
+		}
+
 		System.out.println("Passed [ " + inputPath + " ]");
+	}
+
+	// Bundle-Description: WAS WebContainer 8.0 with Servlet 3.0 support
+	// Bundle-Name: WAS WebContainer
+	// Bundle-SymbolicName: com.ibm.ws.webcontainer
+	// Bundle-Version: 1.1.35.cl191220191120-0300
+	// 
+	// com.ibm.ws.webcontainer=com.ibm.ws.webcontainer.jakarta,2.0,+" Jakarta",+"; Jakarta Enabled"
+	// 
+	// Bundle-SymbolicName: com.ibm.ws.webcontainer.jakarta
+	// Bundle-Version: 2.0
+	// Bundle-Name: WAS WebContainer Jakarta
+	// Bundle-Description: WAS WebContainer 8.0 with Servlet 3.0 support; Jakarta enabled
+
+	protected String validate(List<String> manifestLines, String[][] expectedOutput) {
+		boolean [] matches = new boolean[expectedOutput.length];
+		int numMatches = 0;
+
+		int numLines = manifestLines.size();
+
+		System.out.println("Validating updated bundle identity: Lines [ " + numLines + " ]");
+		for ( int matchNo = 0; matchNo < expectedOutput.length; matchNo++ ) {
+			String prefix = expectedOutput[matchNo][0];
+			String suffix = expectedOutput[matchNo][1];
+			System.out.println("Match [ " + matchNo + " ] Prefix [ " + prefix + " ] Suffix [ " + suffix + " ]");
+		}
+
+		for ( int lineNo = 0; lineNo < numLines; lineNo++ ) {
+			String line = manifestLines.get(lineNo);
+
+			for ( int matchNo = 0; matchNo < expectedOutput.length; matchNo++ ) {
+				String prefix = expectedOutput[matchNo][0];
+				String suffix = expectedOutput[matchNo][1];
+				
+				String message;
+
+				if ( line.startsWith(prefix) ) {
+					if ( line.length() != prefix.length() + suffix.length() ) {
+						message = "Incorrect line length";
+					} else if ( !line.endsWith(suffix) ) {
+						message = "Incorrect attribute value";
+
+					} else if ( matches[matchNo] ) {
+						message = "Duplicate match of [ " + prefix + " ] at line [ " + lineNo + " ]";
+
+					} else {
+						System.out.println("Validated [ " + matchNo + " ]:");
+						System.out.println("  Prefix [ " + prefix + " ]");
+						System.out.println("  Suffix [ " + suffix + " ]");
+						System.out.println("  Line [ " + lineNo + " ] [ " + line + " ]");
+
+						message = null;
+
+						matches[matchNo] = true;
+						numMatches++;
+					}
+
+					if ( message != null ) {
+						System.out.println("Failed [ " + matchNo + " ]: [ " + message + " ]");
+						System.out.println("  Prefix [ " + prefix + " ]");
+						System.out.println("  Suffix [ " + suffix + " ]");
+						System.out.println("  Line [ " + lineNo + " ] [ " + line + " ]");
+
+						return message;
+					}
+				}
+			}
+		}
+
+		if ( numMatches < expectedOutput.length ) {
+			return "Located [ " + numMatches + " ] out of [ " + expectedOutput.length + " ] matches";
+		} else {
+			return null;
+		}
 	}
 
 	//
@@ -229,7 +349,7 @@ public class TestTransformManifest {
 
 	@Test
 	public void testTransformManifest() throws JakartaTransformException, IOException {
-		testTransform(TEST_MANIFEST_PATH, MANIFEST_TO_JAKARTA_DATA, ManifestActionImpl.IS_MANIFEST);
+		testTransform(TEST_MANIFEST_PATH, MANIFEST_TO_JAKARTA_DATA, WEBCONTAINER_BUNDLE_OUTPUT, ManifestActionImpl.IS_MANIFEST);
 		// throws JakartaTransformException, IOException
 	}
 
@@ -238,9 +358,9 @@ public class TestTransformManifest {
 		testTransform(TEST_FEATURE_PATH, FEATURE_TO_JAKARTA_DATA, ManifestActionImpl.IS_FEATURE);
 		// throws JakartaTransformException, IOException
 	}
-	
+
     String newVersion = "[4.0,5)";
-	
+
 	// Embedding text is the input for each test
 	String embeddingText1 = ";version=\"[2.6,3)\",javax.servlet.annotation;version=\"[2.6,3)\"";
 	String embeddingText2 = ";version= \"[2.6,3)\",javax.servlet.annotation;version=\"[2.6,3)\"";
@@ -255,7 +375,7 @@ public class TestTransformManifest {
 	String embeddingText11 = ",javax.servlet.annotation;version=\"[2.6,3)\""; // leading comma
 	String embeddingText12 = ";version=\"[2.6,3),javax.servlet.annotation;version=\"[2.6,3)\"";  // missing quote after version
 	String embeddingText13 = "\",com.ibm.ws.webcontainer.core;version=\"1.1.0\""; // first char is a quote (no package attributes)
-	
+
 	// Expected results: When replacing the version, the expected result is the entire 
 	// embedding text with the version of the first package replaced with the new version.
 	String expectedResultText1_ReplaceVersion = ";version=\""+ newVersion + "\",javax.servlet.annotation;version=\"[2.6,3)\"";
@@ -271,7 +391,7 @@ public class TestTransformManifest {
 	String expectedResultText11_ReplaceVersion = ",javax.servlet.annotation;version=\"[2.6,3)\"";
 	String expectedResultText12_ReplaceVersion = ";version=\"[2.6,3),javax.servlet.annotation;version=\"[2.6,3)\""; // missing quote (no version replacement)
 	String expectedResultText13_ReplaceVersion = "\",com.ibm.ws.webcontainer.core;version=\"1.1.0\""; 
-	
+
 	// Expected results: When getting package attributes, expected result is 
 	// just the package attribute text which is at the beginning of the embedding text
 	String expectedResultText1_GetPackageText = ";version=\"[2.6,3)\",";
@@ -287,8 +407,7 @@ public class TestTransformManifest {
 	String expectedResultText11_GetPackageText = ""; // leading comma followed by package is empty string
 	String expectedResultText12_GetPackageText = ";version=\"[2.6,3),"; // missing quote (no version replacement)
 	String expectedResultText13_GetPackageText = "";  //Not starting with ';' produces empty string
-	
-	
+
 	/**
 	 * Subclass which allows us to call protected methods of ManifestActionImpl
 	 */
@@ -299,21 +418,21 @@ public class TestTransformManifest {
 				Map<String, String> versions) {
 
 				super(logStream, isTerse, isVerbose,
-				      includes, excludes, renames, versions);
+				      includes, excludes,
+				      renames, versions, null);
 			}
-		
+
 		public boolean callIsTrueMatch(String text, int textLimit, int matchStart, int keyLen ) {
 			return isTrueMatch(text, textLimit, matchStart, keyLen );
 		}
-		
-		public String callReplacePackageVersion(String embeddingText, String newVersion) {
-			return replacePackageVersion(embeddingText, newVersion);
+
+		public String callReplacePackageVersion(String embeddingText, String newPackageVersion) {
+			return replacePackageVersion(embeddingText, newPackageVersion);
 		}
-		
+
 		public String callGetPackageAttributeText(String embeddingText) {
 			return getPackageAttributeText(embeddingText);
 		}
-		
 	}
 	
 	@Test
@@ -499,16 +618,14 @@ public class TestTransformManifest {
 				     "Result not expected:\nexpected: " + expectedResultText12_ReplaceVersion + "\nactual:" + result + "\n");
 		
 		result = mai.callReplacePackageVersion(embeddingText13, newVersion);
+
 		assertEquals(expectedResultText13_ReplaceVersion,
 				     result,
 				     "Result not expected:\nexpected: " + expectedResultText13_ReplaceVersion + "\nactual:" + result + "\n");
-		
-		
 	}
-	
+
 	@Test
 	void testGetPackageAttributeText() {
-		
 		ManifestActionImplSubClass mai = new ManifestActionImplSubClass(System.out, 
                 !ActionImpl.IS_TERSE, 
                 ActionImpl.IS_VERBOSE,
@@ -575,9 +692,9 @@ public class TestTransformManifest {
 				     "Result not expected:\nexpected: " + expectedResultText12_GetPackageText + "\nactual:" + result + "\n");
 	
 		result = mai.callGetPackageAttributeText(embeddingText13);
+
 		assertEquals(expectedResultText13_GetPackageText,
 				     result,
 				     "Result not expected:\nexpected: " + expectedResultText13_GetPackageText + "\nactual:" + result + "\n");
-		     	
 	}
 }

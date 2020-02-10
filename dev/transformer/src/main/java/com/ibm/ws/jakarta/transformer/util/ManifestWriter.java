@@ -178,9 +178,6 @@ public class ManifestWriter {
 
     	Map<String, Name> names = getNames(attributes);
 
-    	Character c = Character.valueOf('c');
-    	c.isJavaIdentifierPart('c');
-    	
     	for ( String name : sort( names.keySet() ) ) {
     		if ( isMain && (vername != null) && name.equals(vername) ) {
     			continue;

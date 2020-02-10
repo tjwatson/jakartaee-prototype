@@ -12,6 +12,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 import com.ibm.ws.jakarta.transformer.JakartaTransformException;
+import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.action.ManifestAction;
 import com.ibm.ws.jakarta.transformer.util.ByteData;
 import com.ibm.ws.jakarta.transformer.util.ManifestWriter;
@@ -33,9 +34,9 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 	public ManifestActionImpl(
 		Set<String> includes, Set<String> excludes, Map<String, String> renames,
 		boolean isManifest,
-		Map<String, String> versions) {
+		Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
 
-		super(includes, excludes, renames, versions);
+		super(includes, excludes, renames, versions, bundleUpdates);
 
 		this.isManifest = isManifest;
 	}
@@ -44,10 +45,12 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 		PrintStream logStream, boolean isTerse, boolean isVerbose,
 		Set<String> includes, Set<String> excludes, Map<String, String> renames,
 		boolean isManifest,
-		Map<String, String> versions) {
+		Map<String, String> versions,
+		Map<String, BundleData> bundleUpdates) {
 
 		super(logStream, isTerse, isVerbose,
-		      includes, excludes, renames, versions);
+		      includes, excludes,
+		      renames, versions, bundleUpdates);
 
 		this.isManifest = isManifest;
 	}
@@ -57,15 +60,17 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 	}
 
 	public ManifestActionImpl(Set<String> includes, Set<String> excludes, Map<String, String> renames) {
-		this(includes, excludes, renames, IS_MANIFEST, null);
+		this(includes, excludes, renames, IS_MANIFEST, null, null);
 	}
 
 	public ManifestActionImpl(
 		PrintStream logStream, boolean isTerse, boolean isVerbose,
 		Set<String> includes, Set<String> excludes, Map<String, String> renames,
-		Map<String, String> versions) {
+		Map<String, String> versions, Map<String, BundleData> bundleUpdates) {
 
-		this(logStream, isTerse, isVerbose, includes, excludes, renames, IS_MANIFEST, versions);
+		this(logStream, isTerse, isVerbose,
+			 includes, excludes,
+			 renames, IS_MANIFEST, versions, bundleUpdates);
 	}
 
 	//
@@ -100,6 +105,10 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 
 	protected void addReplacement() {
 		getChanges().addReplacement();
+	}
+
+	protected void addReplacements(int additions) {
+		getChanges().addReplacements(additions);
 	}
 
 	//
@@ -180,7 +189,11 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 		Attributes initialMainAttributes = initialManifest.getMainAttributes();
 		Attributes finalMainAttributes = finalManifest.getMainAttributes();
 
-		transform(inputName, "main", initialMainAttributes, finalMainAttributes);
+		addReplacements( transformPackages(inputName, "main", initialMainAttributes, finalMainAttributes) );
+
+		if ( transformBundleIdentity(inputName, initialMainAttributes, finalMainAttributes) ) {
+			addReplacement();
+		}
 
 		Map<String, Attributes> initialEntries = initialManifest.getEntries();
 		Map<String, Attributes> finalEntries = finalManifest.getEntries();
@@ -192,51 +205,59 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 			Attributes finalAttributes = new Attributes( initialEntryAttributes.size() );
 			finalEntries.put(entryKey, finalAttributes);
 
-			transform(inputName, entryKey, initialEntryAttributes, finalAttributes);
+			addReplacements( transformPackages(inputName, entryKey, initialEntryAttributes, finalAttributes) );
 		}
 	}
 
-	private static final Set<String> manifestKeysToTransform;
-	
+	private static final Set<String> SELECT_ATTRIBUTES;
+
 	static {
-		Set<String> manifestKeys = new HashSet<String>();
-		manifestKeys.add("DynamicImport-Package");
-		manifestKeys.add("Export-Package");
-	    manifestKeys.add("Import-Package");
-	    manifestKeysToTransform = manifestKeys;
+		Set<String> useNames = new HashSet<String>();
+		useNames.add("DynamicImport-Package");
+		useNames.add("Export-Package");
+	    useNames.add("Import-Package");
+	    SELECT_ATTRIBUTES = useNames;
 	}
-	
-	protected void transform(
+
+	protected boolean selectAttribute(String name) {
+		return SELECT_ATTRIBUTES.contains(name);
+	}
+
+	protected int transformPackages(
 		String inputName, String entryName,
 		Attributes initialAttributes, Attributes finalAttributes) {
 
 		verbose(
 			"Transforming [ %s ]: [ %s ] Attributes [ %d ]\n",
 			inputName, entryName, initialAttributes.size() );		
-		
+
+		int replacements = 0;
+
 		for ( Map.Entry<Object, Object> entries : initialAttributes.entrySet() ) {
-			Object key = entries.getKey(); 
-			String keyName = key.toString();
+			Object untypedName = entries.getKey(); 
+			String typedName = untypedName.toString();
 
 			String initialValue = (String) entries.getValue();
 			String finalValue = null;
-		
-			if (manifestKeysToTransform.contains(keyName)) {
-			   finalValue = replacePackages(keyName, initialValue);
+
+			if ( selectAttribute(typedName) ) {
+			   finalValue = replacePackages(typedName, initialValue);
 			}
-			
+
 			if ( finalValue == null ) {
 				finalValue = initialValue;
 			} else {
-				addReplacement();
+				replacements++;
 			}
 
-			finalAttributes.put(key, finalValue);
+			finalAttributes.put(untypedName, finalValue);
 		}
 
 		verbose(
-			"Transformed [ %s ]: [ %s ] Attributes [ %d ]\n",
-			inputName, entryName, finalAttributes.size() );
+			"Transformed [ %s ]: [ %s ] Attributes [ %d ] Replacements [ %d ]\n",
+			inputName, entryName, finalAttributes.size(), replacements );
+
+		return replacements;
 	}
 
 	protected void write(Manifest manifest, OutputStream outputStream) throws IOException {
@@ -416,41 +437,66 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 		}
 	}
 
+	// DynamicImport-Package: com.ibm.websphere.monitor.meters;version="1.0.0
+	//  ",com.ibm.websphere.monitor.jmx;version="1.0.0",com.ibm.ws.jsp.webcon
+	//  tainerext,com.ibm.wsspi.request.probe.bci,com.ibm.wsspi.probeExtensio
+	//  n,com.ibm.ws.webcontainer.monitor
+
+	// Import-Package: javax.servlet;version="[2.6,3)",javax.servlet.annotati
+	//  on;version="[2.6,3)",javax.servlet.descriptor;version="[2.6,3)",javax
+	//  .servlet.http;version="[2.6,3)",com.ibm.wsspi.http;version="[2.0,3)",
+	//  com.ibm.ws.javaee.dd;version="1.0",com.ibm.ws.javaee.dd.common;versio
+	//  n="1.0",com.ibm.ws.javaee.dd.common.wsclient;version="1.0",com.ibm.ws
+	//  .javaee.dd.web;version="1.0",com.ibm.ws.javaee.dd.web.common;version=
+	//  "1.0",com.ibm.ws.util;version="[1.0,2)",com.ibm.wsspi.injectionengine
+	//  ;version="[3.0,4)",com.ibm.ws.runtime.metadata;version="[1.1,2)"
+
 	/**
+	 * Answer package attribute text which has been updated with a new version range.
+	 *
+	 * Examples 
 	 * 
-	 * @param text  - A string containing package attribute text at the head of the string.
-	 *         Assumptions: - The first package name has already been stripped from the embedding text.
-	 *                      - Other package names and attributes may or may not follow.
-	 *                      - Packages are separated by a comma.
-	 *                      - If a comma is inside quotation marks, it is not a package delimiter.
-	 * @param newVersion    - version to replace the version of the first package in the text
+	 * <quote>
+	 * Import-Package: javax.servlet;version="[2.6,3)",javax.servlet.annotation;version="[2.6,3)"
+	 * </quote>
+	 * 
+	 * <quote>
+	 * DynamicImport-Package: com.ibm.websphere.monitor.meters;version="1.0.0",com.ibm.websphere.monitor.jmx;version="1.0.0"
+	 * </quote>
+	 * 
+	 * The leading package name must be removed from the attribute text.  Other package
+	 * names and attributes may be present.
+	 * 
+	 * Attribute text for different packages use commas as separators, except, commas inside
+	 * quotation marks are not separators.  This is important because commas are present in
+	 * version ranges.
+	 *
+	 * @param text Package attribute text.
+	 * @param newVersion Replacement version values for the package attribute.
 	 *                  
 	 * @return String with version numbers of first package replaced by the newVersion.
 	 */
 	protected String replacePackageVersion(String text, String newVersion) {
 		//verbose("replacePackageVersion: ( %s )\n",  text );
-		
+
 		String packageText = getPackageAttributeText(text);
-		
-		if (packageText == null) {
+		if ( packageText == null ) {
+			return text;
+		} else if ( packageText.isEmpty() ) {
 			return text;
 		}
-		
-		if (packageText.isEmpty()) {
-			return text;
-		}
-		
+
 		//verbose("replacePackageVersion: (packageText: %s )\n", packageText);
-		
+
 		final String VERSION = "version";
 		final int VERSION_LEN = 7;
 		final char QUOTE_MARK = '\"';
-		
+
 		int versionIndex = packageText.indexOf(VERSION);
 		if ( versionIndex == -1 ) { 
 			return text;  // nothing to replace
 		}
-		
+
 		// The actual version numbers are after the "version" and the "=" and between quotation marks ("").
 		// Ignore white space that occurs around the "=", but do not ignore white space between quotation marks.
 		// Everything inside the "" is part of the version and will be replaced.
@@ -458,58 +504,54 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
     	boolean foundQuotationMark = false; 
     	int versionBeginIndex = -1;
     	int versionEndIndex = -1;
-    	
+
 		// skip to actual version number which is after "=".  Version begins inside double quotation marks 
         for (int i=versionIndex + VERSION_LEN; i < packageText.length(); i++) {
-                
         	char ch = packageText.charAt(i);
-        	
+
         	// skip white space until we find equals sign
         	if ( !foundEquals ) {
-        		
         		if (ch == '=') {
         			foundEquals = true;
         			continue;
         		}
-        		
+
         		if ( Character.isWhitespace(ch)) {
         			continue;
         		}
-                 
-        		error("Syntax error found non-white-space character before equals sign in version {" + packageText + "}\n");
+        		error("Syntax error found non-white-space character before equals sign in version {%s}\n", packageText);
         		return text;   // Syntax error - returning original text
         	}
-        	
+
         	// Skip white space past the equals sign
-        	if ( Character.isWhitespace(ch)) {
-    			verbose("ch is \'%s\' and is whitespace.\n", ch);
+        	if ( Character.isWhitespace(ch) ) {
+    			// verbose("ch is \'%s\' and is whitespace.\n", ch);
     			continue;
     		}
-        	
+
         	// When we find the quotation marks past the equals sign, we are finished.
-        	if (!foundQuotationMark) {
-        		
-        		if (ch == QUOTE_MARK) {
+        	if ( !foundQuotationMark ) {
+        		if ( ch == QUOTE_MARK ) {
         			versionBeginIndex = i+1;  // just past the 1st quotation mark
-        			
+
         			versionEndIndex = packageText.indexOf('\"', i+1);
         			if (versionEndIndex == -1) {
         				error("Syntax error, package version does not have closing quotation mark\n");
         				return text; // Syntax error - returning original text
         			}
         			versionEndIndex--; // just before the 2nd quotation mark
-        			
+
         			//verbose("versionBeginIndex = [%s]\n", versionBeginIndex);
             		//verbose("versionEndIndex = [%s]\n", versionEndIndex);
         			foundQuotationMark = true; // not necessary, just leave loop
         			break;
         		}
-        		
-        		if ( Character.isWhitespace(ch)) {
+
+        		if ( Character.isWhitespace(ch) ) {
         			continue;
         		}
-                 
-        		error("Syntax error found non-white-space character after equals sign  in version {" + packageText + "}\n");
+
+        		error("Syntax error found non-white-space character after equals sign  in version {%s}\n", packageText);
         		return text;   // Syntax error - returning original text
         	}
         }
@@ -525,7 +567,7 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 
 		return newText;
 	}
-	
+
 	/**
 	 * 
 	 * @param text  - A string containing package attribute text at the head of the string.
@@ -537,66 +579,101 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 	 */
 	protected String getPackageAttributeText(String text) {
 		//verbose("getPackageAttributeText ENTER[ text: %s]\n", text);
-		
-		if (text == null) {
+
+		if ( text == null ) {
 			return null;
 		}
-		
-		if (!firstCharIsSemicolon(text)) {
+
+		if ( !firstCharIsSemicolon(text) ) {
 			return "";  // no package attributes
 		}
-		
+
 		int commaIndex = text.indexOf(',');
 		verbose("Comma index: [%d]\n", commaIndex);
 		// If there is no comma, then the whole text is the packageAttributeText
-		if (commaIndex == -1) {
+		if ( commaIndex == -1 ) {
 			return text;
 		}
-		
+
 		// packageText is beginning of text up to and including comma.
 		// Need to test whether the comma is within quotes - thus not the true end of the packageText.
 		// If an odd number of quotes are found, then the comma is in quotes and we need to find the next comma.
 		String packageText = text.substring(0, commaIndex+1);   
-		verbose("packageText .%s.\n", packageText);
+		verbose("packageText [ %s ]\n", packageText);
 		boolean quotesAreEven = hasEvenNumberOfOccurrencesOfChar(packageText, '\"');
-		
+
 		if ( !quotesAreEven ) {
 			commaIndex = text.indexOf(',', packageText.length());
-			if (commaIndex == -1) {
+			if ( commaIndex == -1 ) {
 				packageText = text;  // No trailing comma indicates embedding text is the package text.
 			} else {
-			   verbose("Updating packageText .%s.\n", packageText);
+			   verbose("Updating packageText [ %s ]\n", packageText);
 			   verbose("commaIndex is [ %d ]\n", commaIndex);
 			   packageText = text.substring(0, commaIndex+1);
-			   verbose("new      packageText .%s.\n", packageText);
+			   verbose("new      packageText [ %s ]\n", packageText);
 			}
 		}
-		
-		verbose("getPackageAttributeText returning: .%s.\n", packageText);
+
+		verbose("getPackageAttributeText returning: [ %s ]\n", packageText);
 		return packageText;
 	}
-	
+
 	/**
-	 * Returns true is first non-white space character of the parameter is a semi-colon.
-	 * @param s
-	 * @return
+	 * Tell if the first non-white space character of the parameter is a semi-colon.
 	 */
 	protected boolean firstCharIsSemicolon(String s) {
-		for (int i=0; i < s.length(); i++) {
-			if (Character.isWhitespace(s.charAt(i))) {
+		for ( int i=0; i < s.length(); i++ ) {
+			if ( Character.isWhitespace(s.charAt(i)) ) {
 				continue;
 			}
-			if (s.charAt(i) == ';') {
+			if ( s.charAt(i) == ';' ) {
 				return true;
 			}
 			return false;
 		}
 		return false;
 	}
-	
+
 	private boolean hasEvenNumberOfOccurrencesOfChar(String testString, char testChar) {
 		long occurrences = testString.chars().filter(ch -> ch == '\"').count();
 		return ((occurrences % 2 ) == 0);
 	}
 
+	//
+
+	public static final String SYMBOLIC_NAME_PROPERTY_NAME = "Bundle-SymbolicName";
+	public static final String VERSION_PROPERTY_NAME = "Bundle-Version";
+	public static final String NAME_PROPERTY_NAME = "Bundle-Name";
+	public static final String DESCRIPTION_PROPERTY_NAME = "Bundle-Description";
+
+	public boolean transformBundleIdentity(
+		String inputName,
+		Attributes initialMainAttributes,
+		Attributes finalMainAttributes) {
+
+		String symbolicName = initialMainAttributes.getValue(SYMBOLIC_NAME_PROPERTY_NAME);
+		if ( symbolicName == null ) {
+			return false;
+		}
+
+		BundleData bundleUpdate = getBundleUpdate(symbolicName);
+		if ( bundleUpdate == null ) {
+			return false;
+		}
+
+		finalMainAttributes.putValue(
+			SYMBOLIC_NAME_PROPERTY_NAME,
+			bundleUpdate.getSymbolicName());
+		finalMainAttributes.putValue(
+			VERSION_PROPERTY_NAME,
+			bundleUpdate.getVersion());
+		finalMainAttributes.putValue(
+			NAME_PROPERTY_NAME,
+			bundleUpdate.updateName(initialMainAttributes.getValue(NAME_PROPERTY_NAME)));
+		finalMainAttributes.putValue(
+			DESCRIPTION_PROPERTY_NAME,
+			bundleUpdate.updateDescription(initialMainAttributes.getValue(DESCRIPTION_PROPERTY_NAME)));
+
+		return true;
+	}
 }

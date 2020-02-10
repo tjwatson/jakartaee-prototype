@@ -32,4 +32,9 @@ public class ManifestChangesImpl extends ChangesImpl implements ManifestChanges 
 	public void addReplacement() {
 		replacements++;
 	}
+
+	@Override
+	public void addReplacements(int additions) {
+		replacements += additions;
+	}
 }
