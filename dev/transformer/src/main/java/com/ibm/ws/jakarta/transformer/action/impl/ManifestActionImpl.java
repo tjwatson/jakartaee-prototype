@@ -204,6 +204,8 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 		useNames.add("DynamicImport-Package");
 		useNames.add("Export-Package");
 	    useNames.add("Import-Package");
+	    useNames.add("Subsystem-Content");
+	    useNames.add("IBM-API-Package");
 	    SELECT_ATTRIBUTES = useNames;
 	}
 
@@ -556,6 +558,11 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 		return newText;
 	}
 
+	//
+	// Subsystem-Content: com.ibm.websphere.appserver.javax.el-3.0; apiJar=false; type="osgi.subsystem.feature",
+	//  com.ibm.websphere.appserver.javax.servlet-3.1; ibm.tolerates:="4.0"; apiJar=false; type="osgi.subsystem.feature",
+	//  com.ibm.websphere.javaee.jsp.2.3; location:="dev/api/spec/,lib/"; mavenCoordinates="javax.servlet.jsp:javax.servlet.jsp-api:2.3.1"; version="[1.0.0,1.0.200)"
+
 	/**
 	 * 
 	 * @param text  - A string containing package attribute text at the head of the string.
@@ -634,6 +641,44 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 	public static final String NAME_PROPERTY_NAME = "Bundle-Name";
 	public static final String DESCRIPTION_PROPERTY_NAME = "Bundle-Description";
 
+// Bundle case:
+//	Bundle updates:
+//
+//		Updated:
+//
+//		Bundle-Description: WAS WebContainer 8.1 with Servlet 4.0 support
+//		Bundle-Name: WAS WebContainer
+//		Bundle-SymbolicName: com.ibm.ws.webcontainer.servlet.4.0
+//		Bundle-Version: 1.0.36.cl200120200108-0300
+//
+//		Ignored:
+//
+//		Bundle-Copyright: Copyright (c) 1999, 2019 IBM Corporation and others.
+//		  All rights reserved. This program and the accompanying materials are
+//		  made available under the terms of the Eclipse Public License v1.0 wh
+//		 ich accompanies this distribution, and is available at http://www.ecl
+//		 ipse.org/legal/epl-v10.html.
+//		Bundle-License: Eclipse Public License; url=https://www.eclipse.org/le
+//		 gal/epl-v10.html
+//		Bundle-ManifestVersion: 2
+//		Bundle-SCM: connection=scm:git:https://github.com/OpenLiberty/open-lib
+//		 erty.git, developerConnection=scm:git:https://github.com:OpenLiberty/
+//		 open-liberty.git, url=https://github.com/OpenLiberty/open-liberty/tre
+//		 e/master
+//		Bundle-Vendor: IBM
+		
+	// Subsystem case:
+	//
+//	Subsystem-Description: %description
+//	Subsystem-License: https://www.eclipse.org/legal/epl-v10.html
+//	Subsystem-Localization: OSGI-INF/l10n/com.ibm.websphere.appserver.jsp-2.3
+//	Subsystem-ManifestVersion: 1
+//	Subsystem-Name: JavaServer Pages 2.3
+//	Subsystem-SymbolicName: com.ibm.websphere.appserver.jsp-2.3; visibility:=public; singleton:=true
+//	Subsystem-Type: osgi.subsystem.feature
+//	Subsystem-Vendor: IBM Corp.
+//	Subsystem-Version: 1.0.0
+	
 	public boolean transformBundleIdentity(
 		String inputName,
 		Attributes initialMainAttributes,
