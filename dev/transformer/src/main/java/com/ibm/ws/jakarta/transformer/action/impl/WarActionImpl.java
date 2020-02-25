@@ -44,11 +44,8 @@ public class WarActionImpl extends ContainerActionImpl implements WarAction {
 	//
 
 	@Override
-	public boolean accept(String resourceName) {
-		// TODO: This is *not* sufficient: WAR files which are explicitly listed in
-		//       an application descriptor may have any file extension.
-
-		return resourceName.endsWith(".war");
+	public String getAcceptExtension() {
+		return ".war";
 	}
 
 	// WAR do not support byte based conversion

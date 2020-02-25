@@ -1,5 +1,7 @@
 package com.ibm.ws.jakarta.transformer.action.impl;
 
+import java.io.PrintStream;
+
 import com.ibm.ws.jakarta.transformer.action.JavaChanges;
 
 public class JavaChangesImpl extends ChangesImpl implements JavaChanges {
@@ -37,4 +39,9 @@ public class JavaChangesImpl extends ChangesImpl implements JavaChanges {
     public void addReplacements(int additions) {
         replacements += additions;
     }
+
+	@Override
+	public void display(PrintStream printStream) {
+		// EMPTY
+	}
 }

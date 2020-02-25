@@ -1,5 +1,6 @@
 package com.ibm.ws.jakarta.transformer.action;
 
+import java.io.File;
 import java.util.List;
 
 public interface ContainerAction extends Action {
@@ -8,5 +9,7 @@ public interface ContainerAction extends Action {
 
 	CompositeAction getAction();
 	List<? extends Action> getActions();
-	Action acceptAction(String inputName);
+	
+	Action acceptAction(String resourceName);	
+	Action acceptAction(String resourceName, File resourceFile);
 }

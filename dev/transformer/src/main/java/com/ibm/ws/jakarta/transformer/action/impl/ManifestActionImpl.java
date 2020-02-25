@@ -102,24 +102,8 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 	//
 
 	@Override
-	public boolean accept(String resourceName) {
-		int resourceLen = resourceName.length();
-
-		int minLen;
-		String reqEnd;
-		if ( getIsManifest() ) {
-			minLen = 11;
-			reqEnd = "MANIFEST.MF";
-		} else {
-			minLen = 3;
-			reqEnd = ".MF";
-		}
-
-		if ( resourceLen < minLen ) {
-			return false;
-		} else {
-			return resourceName.regionMatches(true, resourceLen - minLen, reqEnd, 0, minLen);
-		}
+	public String getAcceptExtension() {
+		return ( getIsManifest() ? "MANIFEST.MF" : ".MF" );
 	}
 
 	//

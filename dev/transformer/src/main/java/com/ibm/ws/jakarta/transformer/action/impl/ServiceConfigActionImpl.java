@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -73,7 +74,12 @@ public class ServiceConfigActionImpl extends ActionImpl implements ServiceConfig
 	//
 
 	@Override
-	public boolean accept(String resourceName) {
+	public String getAcceptExtension() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean accept(String resourceName, File resourceFile) {
 		return resourceName.contains(META_INF_SERVICES);
 	}
 

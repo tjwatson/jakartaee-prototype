@@ -1,5 +1,7 @@
 package com.ibm.ws.jakarta.transformer.action.impl;
 
+import java.io.PrintStream;
+
 import com.ibm.ws.jakarta.transformer.action.XMLChanges;
 
 public class XMLChangesImpl extends ChangesImpl implements XMLChanges {
@@ -31,5 +33,12 @@ public class XMLChangesImpl extends ChangesImpl implements XMLChanges {
 	@Override
 	public void addReplacement() {
 		replacements++;
+	}
+
+	//
+
+	@Override
+	public void display(PrintStream printStream) {
+		// EMPTY
 	}
 }

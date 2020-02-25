@@ -1,5 +1,6 @@
 package com.ibm.ws.jakarta.transformer.action.impl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,9 +67,14 @@ public class CompositeActionImpl extends ActionImpl implements CompositeAction {
 	}
 
 	@Override
-	public ActionImpl acceptAction(String resourceName) {
+	public String getAcceptExtension() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ActionImpl acceptAction(String resourceName, File resourceFile) {
 		for ( ActionImpl action : getActions() ) {
-			if ( action.accept(resourceName) ) {
+			if ( action.accept(resourceName, resourceFile) ) {
 				acceptedAction = action;
 				return action;
 			}
@@ -78,8 +84,8 @@ public class CompositeActionImpl extends ActionImpl implements CompositeAction {
 	}
 
 	@Override
-	public boolean accept(String resourceName) {
-		return ( acceptAction(resourceName) != null );
+	public boolean accept(String resourceName, File resourceFile) {
+		return ( acceptAction(resourceName, resourceFile) != null );
 	}
 
 	@Override

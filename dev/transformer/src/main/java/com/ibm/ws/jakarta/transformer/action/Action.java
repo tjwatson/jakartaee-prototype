@@ -1,5 +1,6 @@
 package com.ibm.ws.jakarta.transformer.action;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -110,8 +111,18 @@ public interface Action {
 	 * @param resourceName The name of the resource.
 	 *
 	 * @return True or false telling if the resource can be handled by this action.
-	 */
+	 */	
 	boolean accept(String resourceName);
+
+	/**
+	 * Tell if a resource is of a type which is handled by this action.
+	 *
+	 * @param resourceName The name of the resource.
+	 * @param resourceFile The file of the resource.  This can be null.
+	 *
+	 * @return True or false telling if the resource can be handled by this action.
+	 */
+	boolean accept(String resourceName, File resourceFile);
 
 	//
 
@@ -134,6 +145,21 @@ public interface Action {
 	SignatureRule getSignatureRule();
 
 	//
+
+	/**
+	 * Apply this action onto an input file, writing output
+	 * onto an output file.
+	 *
+	 * @param inputName A name associated with the input file.
+	 * @param inputFile The input file.
+	 * @param outputName A name associated with the output file.
+	 * @param outputFile The output file.
+	 *
+	 * @throws JakartaTransformException Thrown if the action could not be applied.
+	 */
+	void apply(
+		String inputName, File inputFile,
+		String outputName, File outputFile) throws JakartaTransformException;
 
 	/**
 	 * Apply this action on an input stream.
@@ -191,7 +217,8 @@ public interface Action {
 	 *
 	 * @throws JakartaTransformException Thrown if the transform failed. 
 	 */	
-	boolean apply(String inputName, InputStream inputStream, int inputCount, OutputStream outputStream)
+	boolean apply(String inputName, InputStream inputStream, long inputCount, OutputStream outputStream)
+
 		throws JakartaTransformException;
 
 	/**

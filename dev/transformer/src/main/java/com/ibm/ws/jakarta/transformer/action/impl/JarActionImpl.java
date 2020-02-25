@@ -53,8 +53,8 @@ public class JarActionImpl extends ContainerActionImpl implements JarAction {
 	//
 
 	@Override
-	public boolean accept(String resourceName) {
-		return resourceName.endsWith(".jar");
+	public String getAcceptExtension() {
+		return ".jar";
 	}
 
 	//

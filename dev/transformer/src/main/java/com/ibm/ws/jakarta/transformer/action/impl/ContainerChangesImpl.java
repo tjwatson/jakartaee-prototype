@@ -169,7 +169,7 @@ public class ContainerChangesImpl extends ChangesImpl implements ContainerChange
 			"[ %22s ] [ %6s ] %10s [ %6s ] %8s [ %6s ]\n";
 
     @Override
-	public void displayChanges(PrintStream stream) {
+	public void display(PrintStream stream) {
 
 		// ================================================================================
 		// [ Input  ] [ c:\dev\jakarta-repo-pub\jakartaee-prototype\dev\transformer\app\test.jar ]
@@ -200,12 +200,12 @@ public class ContainerChangesImpl extends ChangesImpl implements ContainerChange
 				"Changed", getAllChanged());
 
 		for ( String actionName : getActionNames() ) {
-			int unchangedByAction = getUnchanged(actionName); 
-			int changedByAction = getChanged(actionName);
+			int useUnchangedByAction = getUnchanged(actionName); 
+			int useChangedByAction = getChanged(actionName);
 			info( stream, DATA_LINE,
-					actionName, unchangedByAction + changedByAction,
-					"Unchanged", unchangedByAction,
-					"Changed", changedByAction);
+					actionName, useUnchangedByAction + useChangedByAction,
+					"Unchanged", useUnchangedByAction,
+					"Changed", useChangedByAction);
 		}
 
 		info( stream, DASH_LINE );

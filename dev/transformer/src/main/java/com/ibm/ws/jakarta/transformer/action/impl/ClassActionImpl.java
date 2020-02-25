@@ -160,8 +160,8 @@ public class ClassActionImpl extends ActionImpl implements ClassAction {
 	//
 
 	@Override
-	public boolean accept(String resourceName) {
-		return resourceName.endsWith(".class");
+	public String getAcceptExtension() {
+		return ".class";
 	}
 
 	//
@@ -334,6 +334,7 @@ public class ClassActionImpl extends ActionImpl implements ClassAction {
 
 		byte[] outputBytes = outputClassData.toByteArray();
 		log("  Class size: %s: %s -> %s\n", inputName, inputBytes.length, outputBytes.length);
+		
 		return new ByteData(outputName, outputBytes, 0, outputBytes.length);
 	}
 

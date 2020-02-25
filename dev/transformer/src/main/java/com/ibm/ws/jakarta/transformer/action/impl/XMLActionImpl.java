@@ -62,8 +62,8 @@ public class XMLActionImpl extends ActionImpl implements XMLAction {
 	//
 
 	@Override
-	public boolean accept(String resourceName) {
-		return resourceName.endsWith(".xml");
+	public String getAcceptExtension() {
+		return ".xml";
 	}
 
 	//

@@ -1,5 +1,9 @@
 package com.ibm.ws.jakarta.transformer;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -113,4 +117,54 @@ public class JakartaTransformProperties {
 		}
 		return bundleUpdates;
 	}
+	
+	//
+	
+    /**
+     * Tell if a manifest file is formatted properly as a manifest file.
+     * 
+     * Properly formatted manifest files must have no lines longer than 72 characters
+     * wide.
+     * 
+     * This test is required to distinguish feature-manifests, which have a manifest-like
+     * format but which do not obey the line length restriction.
+     * 
+     * @param manifestPath The path to a file to be tested.
+     * @param manifestFile The manifest file.
+     *
+     * @return True or false telling if the file is a feature-manifest type file.
+     * 
+     * @throws JakartaTransformException Thrown if an error occurs processing the file.
+     */
+    @SuppressWarnings("resource")
+	public static boolean isFeatureManifest(String manifestPath, File manifestFile) throws JakartaTransformException {
+        FileReader manifestReader;
+        try {
+        	manifestReader = new FileReader(manifestFile);
+        } catch ( IOException e ) {
+        	throw new JakartaTransformException("Failed to open [ " + manifestPath  + " ]", e);
+        } 
+
+        try {
+        	BufferedReader bufferedReader = new BufferedReader(manifestReader);
+
+            String line;
+            while ( (line = bufferedReader.readLine()) != null) {
+                if ( line.length() > 72 ) {
+                    return true;
+                }
+            }
+            return false;
+
+        } catch ( IOException e ) {
+        	throw new JakartaTransformException("Failed to read  [ " + manifestPath  + " ]", e);
+
+        } finally {
+        	try {
+        		manifestReader.close();
+        	} catch ( IOException e ) {
+            	throw new JakartaTransformException("Failed to close  [ " + manifestPath  + " ]", e);
+        	}
+        }
+    }
 }

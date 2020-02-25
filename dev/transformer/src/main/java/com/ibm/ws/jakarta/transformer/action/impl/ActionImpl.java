@@ -27,6 +27,7 @@ import aQute.bnd.signatures.SimpleClassTypeSignature;
 import aQute.bnd.signatures.ThrowsSignature;
 import aQute.bnd.signatures.TypeArgument;
 import aQute.bnd.signatures.TypeParameter;
+import aQute.lib.io.IO;
 
 public abstract class ActionImpl implements Action {
 
@@ -236,6 +237,20 @@ public abstract class ActionImpl implements Action {
 	}
 
 	//
+	
+	public abstract String getAcceptExtension();
+
+	@Override
+	public boolean accept(String resourceName) {
+		return accept(resourceName, null);
+	}
+
+	@Override
+	public boolean accept(String resourceName, File resourceFile) {
+		return resourceName.toLowerCase().endsWith( getAcceptExtension() );
+	}
+
+	//
 
 	protected abstract ChangesImpl newChanges();
 
@@ -386,14 +401,16 @@ public abstract class ActionImpl implements Action {
 
 	@Override
 	public boolean apply(
-		String inputName, InputStream inputStream, int inputCount,
+		String inputName, InputStream inputStream, long inputCount,
 		OutputStream outputStream) throws JakartaTransformException {
+
+		int intInputCount = FileUtils.verifyArray(0, inputCount);
 
 		String className = getClass().getSimpleName();
 		String methodName = "apply";
 
 		verbose("[ %s.%s ]: Requested [ %s ] [ %s ]\n", className, methodName, inputName, inputCount);
-		ByteData inputData = read(inputName, inputStream, inputCount); // throws JakartaTransformException
+		ByteData inputData = read(inputName, inputStream, intInputCount); // throws JakartaTransformException
 		verbose("[ %s.%s ]: Obtained [ %s ] [ %s ]\n", className, methodName, inputName, inputData.length);
 
 		ByteData outputData;
@@ -427,5 +444,68 @@ public abstract class ActionImpl implements Action {
 	public void apply(File inputFile, File outputFile) throws JakartaTransformException {
 		throw new JakartaTransformException("Not implemented by subclass");
 		
+	}
+
+	//
+
+    protected InputStream openInputStream(File inputFile)
+    	throws JakartaTransformException {
+
+    	try {
+    		return IO.stream(inputFile);
+    	} catch ( IOException e ) {
+        	throw new JakartaTransformException("Failed to open input [ " + inputFile.getAbsolutePath() + " ]", e);
+        }
+    }
+
+    protected void closeInputStream(File inputFile, InputStream inputStream)
+    	throws JakartaTransformException {
+
+    	try {
+    		inputStream.close();
+    	} catch ( IOException e ) {
+        	throw new JakartaTransformException("Failed to close input [ " + inputFile.getAbsolutePath() + " ]", e);
+        }        		
+    }
+
+    private OutputStream openOutputStream(File outputFile)
+    	throws JakartaTransformException {
+
+    	try {
+    		return IO.outputStream(outputFile);
+    	} catch ( IOException e ) {
+    		throw new JakartaTransformException("Failed to open output [ " + outputFile.getAbsolutePath() + " ]", e);
+    	}
+    }
+
+    private void closeOutputStream(File outputFile, OutputStream outputStream)
+    	throws JakartaTransformException {
+
+    	try {
+    		outputStream.close();
+    	} catch ( IOException e ) {
+        	throw new JakartaTransformException("Failed to close output [ " + outputFile.getAbsolutePath() + " ]", e);
+        }        		
+    }
+
+    @Override
+	public void apply(
+		String inputName, File inputFile,
+		String outputName, File outputFile) throws JakartaTransformException {
+
+		long inputLength = inputFile.length();
+        verbose("Input [ %s ] Length [ %s ]\n", inputName, inputLength);
+
+		InputStream inputStream = openInputStream(inputFile);
+		try {
+			OutputStream outputStream = openOutputStream(outputFile);
+			try {
+				apply(inputName, inputStream, inputLength, outputStream);
+			} finally {
+				closeOutputStream(outputFile, outputStream);
+			}
+		} finally {
+			closeInputStream(inputFile, inputStream);
+		}
 	}
 }
