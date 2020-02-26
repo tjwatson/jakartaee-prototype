@@ -313,38 +313,7 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 		sb.setLength(0);
 		return quotedValue;
 	}
-	
-	/**
-	 * Checks the character before and after a match to verify that the match
-	 * is NOT a subset of a larger package, and thus not really a match.
-	 *
-	 * @param text
-	 * @param textLimit
-	 * @param lastMatchEnd
-	 * @param matchStart
-	 * @param keyLen
-	 * @return
-	 */
-	protected boolean isTrueMatch(String text, int textLimit, int matchStart, int keyLen ) {
-		
-		//  Verify the match is not part of a longer package name.				
-        if ( matchStart > 0 ) {
-            char charBeforeMatch = text.charAt(matchStart - 1);
-            if ( Character.isJavaIdentifierPart(charBeforeMatch) || (charBeforeMatch == '.')) { 
-                return false;
-            }
-        }
-        int matchEnd = matchStart + keyLen;
-        if ( textLimit > matchEnd ) {
-            char charAfterMatch = text.charAt(matchEnd);
-            if ( Character.isJavaIdentifierPart(charAfterMatch) || (charAfterMatch == '.') ) {
-                return false;
-            }
-        }
-        return true;
-	}
-	
-	
+
 	/**
 	 * Replace all embedded packages of specified text with replacement
 	 * packages.

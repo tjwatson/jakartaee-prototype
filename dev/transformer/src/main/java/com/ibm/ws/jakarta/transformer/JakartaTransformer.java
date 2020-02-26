@@ -30,6 +30,7 @@ import com.ibm.ws.jakarta.transformer.action.impl.CompositeActionImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.DirectoryActionImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.InputBufferImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.JarActionImpl;
+import com.ibm.ws.jakarta.transformer.action.impl.JavaActionImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.LoggerImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.ManifestActionImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.NullActionImpl;
@@ -693,6 +694,8 @@ public class JakartaTransformer {
         			useRootAction.addUsing( DirectoryActionImpl::new );
         		ClassActionImpl classAction =
         			useRootAction.addUsing( ClassActionImpl::new );
+        		JavaActionImpl javaAction =
+        			useRootAction.addUsing( JavaActionImpl::new );
         		ServiceConfigActionImpl serviceConfigAction =
         			useRootAction.addUsing( ServiceConfigActionImpl::new );
         		ManifestActionImpl manifestAction =
@@ -707,6 +710,7 @@ public class JakartaTransformer {
         		// Directory actions know about all actions except for directory actions.
 
         		directoryAction.addAction(classAction);
+        		directoryAction.addAction(javaAction);
         		directoryAction.addAction(serviceConfigAction);
         		directoryAction.addAction(manifestAction);
         		directoryAction.addAction(featureAction);
@@ -716,6 +720,7 @@ public class JakartaTransformer {
         		// Jar actions know about all actions except directory actions and jar actions.
         		// TODO: Should jars be allowed to nest other archives?
         		jarAction.addAction(classAction);
+        		jarAction.addAction(javaAction);
         		jarAction.addAction(serviceConfigAction);
         		jarAction.addAction(manifestAction);
         		jarAction.addAction(featureAction);

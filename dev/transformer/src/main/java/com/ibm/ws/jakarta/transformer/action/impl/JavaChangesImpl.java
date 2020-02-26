@@ -42,6 +42,14 @@ public class JavaChangesImpl extends ChangesImpl implements JavaChanges {
 
 	@Override
 	public void displayChanges(PrintStream printStream, String inputPath, String outputPath) {
-		// EMPTY
+		printStream.printf(
+			"Input  [ %s ] as [ %s ]\n",
+			getInputResourceName(), inputPath);
+		printStream.printf(
+			"Output [ %s ] as [ %s ]\n",
+			getOutputResourceName(), outputPath);
+
+		printStream.printf( "Replacements [ %s ]\n",
+			getReplacements() );
 	}
 }
