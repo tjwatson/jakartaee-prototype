@@ -45,7 +45,9 @@ public abstract class ChangesImpl implements Changes {
 
 	@Override
 	public boolean hasResourceNameChange() {
-		return ( !inputResourceName.equals(outputResourceName) );
+		// The input name will be null if the transform fails very early.
+		return ( (inputResourceName != null) &&
+				 !inputResourceName.equals(outputResourceName) );
 	}
 
 	//

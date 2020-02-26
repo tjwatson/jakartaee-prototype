@@ -14,4 +14,4 @@ set TX_CMD=java -cp %TX_CP% %TX_CLASS%
 %TX_CMD% %*
 
 REM del servlet.4.output.jar
-REM tx -jar servlet.4.jar -output servlet.4.output.jar -ts servlet4.selections
+REM tx servlet.4.jar servlet.4.output.jar -o -ts servlet4.selections

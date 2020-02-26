@@ -400,7 +400,7 @@ public abstract class ActionImpl implements Action {
 	}
 
 	@Override
-	public boolean apply(
+	public void apply(
 		String inputName, InputStream inputStream, long inputCount,
 		OutputStream outputStream) throws JakartaTransformException {
 
@@ -422,29 +422,19 @@ public abstract class ActionImpl implements Action {
 			outputData = null;
 		}
 
-		boolean hasChanges;
 		if ( outputData == null ) {
 			verbose("[ %s.%s ]: Null transform\n", className, methodName);
-			hasChanges = false;
 			outputData = inputData;
 		} else {
 			verbose("[ %s.%s ]: Active transform [ %s ] [ %s ]\n", className, methodName, outputData.name, outputData.length);
-			hasChanges = true;
 		}
 
 		write(outputData, outputStream); // throws JakartaTransformException		
-
-		return hasChanges;
 	}
 
 	@Override
 	public abstract ByteData apply(String inputName, byte[] inputBytes, int inputLength) 
 		throws JakartaTransformException;
-
-	public void apply(File inputFile, File outputFile) throws JakartaTransformException {
-		throw new JakartaTransformException("Not implemented by subclass");
-		
-	}
 
 	//
 
@@ -489,9 +479,8 @@ public abstract class ActionImpl implements Action {
     }
 
     @Override
-	public void apply(
-		String inputName, File inputFile,
-		String outputName, File outputFile) throws JakartaTransformException {
+	public void apply(String inputName, File inputFile, File outputFile)
+		throws JakartaTransformException {
 
 		long inputLength = inputFile.length();
         verbose("Input [ %s ] Length [ %s ]\n", inputName, inputLength);

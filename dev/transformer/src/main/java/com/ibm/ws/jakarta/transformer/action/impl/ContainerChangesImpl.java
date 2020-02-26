@@ -169,8 +169,7 @@ public class ContainerChangesImpl extends ChangesImpl implements ContainerChange
 			"[ %22s ] [ %6s ] %10s [ %6s ] %8s [ %6s ]\n";
 
     @Override
-	public void display(PrintStream stream) {
-
+	public void displayChanges(PrintStream stream, String inputPath, String outputPath) {
 		// ================================================================================
 		// [ Input  ] [ c:\dev\jakarta-repo-pub\jakartaee-prototype\dev\transformer\app\test.jar ]
 		// [ Output ] [ c:\dev\jakarta-repo-pub\jakartaee-prototype\dev\transformer\app\testOutput.jar ]
@@ -183,18 +182,18 @@ public class ContainerChangesImpl extends ChangesImpl implements ContainerChange
 		// [  Service Config Action ] [      7 ]  Unchanged [      5 ]  Changed [      2 ]
 		// ================================================================================
 
-		info( stream, DASH_LINE );
-		info( stream, "[ Input  ] [ %s ]\n", this.getInputResourceName() );
-		info( stream, "[ Output ] [ %s ]\n", this.getOutputResourceName() );
+		stream.printf( DASH_LINE );
+		stream.printf( "Input  [ %s ] as [ %s ]\n", getInputResourceName(), inputPath );
+		stream.printf( "Output [ %s ] as [ %s ]\n", getOutputResourceName(), outputPath );
 
-		info( stream, DASH_LINE );
-		info( stream, DATA_LINE,
+		stream.printf( DASH_LINE );
+		stream.printf( DATA_LINE,
 				"All Resources", this.getAllResources(),
 				"Unselected", getAllUnselected(),
 				"Selected", getAllSelected() );
 
-		info( stream, DASH_LINE );
-		info( stream, DATA_LINE,
+		stream.printf( DASH_LINE );
+		stream.printf( DATA_LINE,
 				"All Actions", getAllSelected(),
 				"Unchanged", getAllUnchanged(),
 				"Changed", getAllChanged());
@@ -202,18 +201,12 @@ public class ContainerChangesImpl extends ChangesImpl implements ContainerChange
 		for ( String actionName : getActionNames() ) {
 			int useUnchangedByAction = getUnchanged(actionName); 
 			int useChangedByAction = getChanged(actionName);
-			info( stream, DATA_LINE,
+			stream.printf( DATA_LINE,
 					actionName, useUnchangedByAction + useChangedByAction,
 					"Unchanged", useUnchangedByAction,
 					"Changed", useChangedByAction);
 		}
 
-		info( stream, DASH_LINE );
+		stream.printf( DASH_LINE );
 	}
-
-    private void info(PrintStream stream, String text, Object... parms) {
-
-        stream.printf(text, parms);
-    	
-    }
 }

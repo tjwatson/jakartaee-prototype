@@ -152,14 +152,12 @@ public interface Action {
 	 *
 	 * @param inputName A name associated with the input file.
 	 * @param inputFile The input file.
-	 * @param outputName A name associated with the output file.
 	 * @param outputFile The output file.
 	 *
 	 * @throws JakartaTransformException Thrown if the action could not be applied.
 	 */
-	void apply(
-		String inputName, File inputFile,
-		String outputName, File outputFile) throws JakartaTransformException;
+	void apply(String inputName, File inputFile, File outputFile)
+		throws JakartaTransformException;
 
 	/**
 	 * Apply this action on an input stream.
@@ -170,7 +168,7 @@ public interface Action {
 	 *
 	 * @param inputName A name associated with the input data.
 	 * @param inputStream A stream containing input data.
-	 *g
+	 *
 	 * @return Transformed input data.
 	 *
 	 * @throws JakartaTransformException Thrown if the transform failed. 
@@ -212,14 +210,11 @@ public interface Action {
 	 * @param inputCount The count of bytes available in the input stream.
 	 * @param outputStream A stream to which to write transformed data.
 	 *
-	 * @return True or false telling if any changes were made to the input
-	 *     data.
-	 *
 	 * @throws JakartaTransformException Thrown if the transform failed. 
 	 */	
-	boolean apply(String inputName, InputStream inputStream, long inputCount, OutputStream outputStream)
-
-		throws JakartaTransformException;
+	void apply(
+		String inputName, InputStream inputStream, long inputCount,
+		OutputStream outputStream) throws JakartaTransformException;
 
 	/**
 	 * Apply this action on an input bytes.
@@ -237,7 +232,8 @@ public interface Action {
 	 *
 	 * @throws JakartaTransformException Thrown if the transform failed. 
 	 */
-	ByteData apply(String inputName, byte[] inputBytes, int inputLength) throws JakartaTransformException;
+	ByteData apply(String inputName, byte[] inputBytes, int inputLength)
+		throws JakartaTransformException;
 
 	//
 

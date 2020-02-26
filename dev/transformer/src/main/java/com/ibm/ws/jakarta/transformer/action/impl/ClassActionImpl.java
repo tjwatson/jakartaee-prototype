@@ -213,11 +213,10 @@ public class ClassActionImpl extends ActionImpl implements ClassAction {
 
 		// Transform the class declaration ...
 
-		String outputName;
-
 		String inputClassName = classBuilder.this_class();
 		String outputClassName = transformBinaryType(inputClassName);
 
+		String outputName;
 		if ( outputClassName != null ) {
 			classBuilder.this_class(outputClassName);
 			outputName = asResourceName(outputClassName);

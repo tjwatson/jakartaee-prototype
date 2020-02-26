@@ -96,7 +96,9 @@ public class CompositeActionImpl extends ActionImpl implements CompositeAction {
 	//
 
 	@Override
-	public ByteData apply(String inputName, byte[] inputBytes, int inputLength) throws JakartaTransformException {
+	public ByteData apply(String inputName, byte[] inputBytes, int inputLength)
+		throws JakartaTransformException {
+
 		return getAcceptedAction().apply(inputName, inputBytes, inputLength);
 	}
 }

@@ -1,8 +1,6 @@
 package com.ibm.ws.jakarta.transformer.action.impl;
 
 import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 
 import com.ibm.ws.jakarta.transformer.JakartaTransformException;
@@ -105,23 +103,11 @@ public abstract class ContainerActionImpl extends ActionImpl implements Containe
 		getChanges().record(action);
 	}
 
-	//
-
-	@Override
-	public boolean accept(String resourceName, File resourceFile) {
-		return resourceName.toLowerCase().endsWith(".jar");
-	}
-
-	//
-
-	public abstract void apply(
-		String inputName, InputStream inputStream,
-		String outputName, OutputStream outputStream) throws JakartaTransformException;
-
 	// Byte base container conversion is not supported.
 
 	@Override
-	public ByteData apply(String inputName, byte[] inputBytes, int inputLength) throws JakartaTransformException {
+	public ByteData apply(String inputName, byte[] inputBytes, int inputLength)
+		throws JakartaTransformException {
 		throw new UnsupportedOperationException();
 	}
 }

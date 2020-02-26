@@ -54,7 +54,9 @@ public class NullActionImpl extends ActionImpl implements NullAction {
 	}
 
 	@Override
-	public ByteData apply(String inputName, byte[] inputBytes, int inputLength) throws JakartaTransformException {
+	public ByteData apply(String inputName, byte[] inputBytes, int inputLength)
+		throws JakartaTransformException {
+
 		clearChanges();
 		setResourceNames(inputName, inputName);
 

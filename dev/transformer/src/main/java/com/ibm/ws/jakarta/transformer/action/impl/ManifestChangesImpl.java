@@ -43,12 +43,16 @@ public class ManifestChangesImpl extends ChangesImpl implements ManifestChanges 
 	//
 
 	@Override
-	public void display(PrintStream printStream) {
-		printStream.printf( "Resource name [ %s ] [ %s ]\n",
-       		getInputResourceName(),
-			getOutputResourceName() );
+	public void displayChanges(PrintStream printStream, String inputPath, String outputPath) {
+		printStream.printf(
+			"Input  [ %s ] as [ %s ]\n",
+       		getInputResourceName(), inputPath );
+		
+		printStream.printf(
+			"Output [ %s ] as [ %s ]\n",
+			getOutputResourceName(), outputPath );
 
-		printStream.printf( "Replacements  [ %s ]\n",
-			getReplacements() );
+		printStream.printf(
+			"Replacements  [ %s ]\n", getReplacements() );
 	}
 }

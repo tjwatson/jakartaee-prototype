@@ -12,7 +12,6 @@ import com.ibm.ws.jakarta.transformer.action.Action;
 import com.ibm.ws.jakarta.transformer.action.ActionType;
 import com.ibm.ws.jakarta.transformer.action.ContainerChanges;
 import com.ibm.ws.jakarta.transformer.action.JarAction;
-import com.ibm.ws.jakarta.transformer.util.ByteData;
 import com.ibm.ws.jakarta.transformer.util.FileUtils;
 import com.ibm.ws.jakarta.transformer.util.InputStreamData;
 
@@ -61,10 +60,10 @@ public class JarActionImpl extends ContainerActionImpl implements JarAction {
 
 	@Override
 	public void apply(
-		String inputPath, InputStream inputStream,
-		String outputPath, OutputStream outputStream) throws JakartaTransformException {
+		String inputPath, InputStream inputStream, long inputCount,
+		OutputStream outputStream) throws JakartaTransformException {
 
-		setResourceNames(inputPath, outputPath);
+		setResourceNames(inputPath, inputPath);
 
 		// Use Zip streams instead of Jar streams.
 		//
@@ -74,21 +73,21 @@ public class JarActionImpl extends ContainerActionImpl implements JarAction {
 		ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
 
 		try {
-			apply(inputPath, zipInputStream, outputPath, zipOutputStream);
+			apply(inputPath, zipInputStream, zipOutputStream);
 			// throws JakartaTransformException
 
 		} finally {
 			try {
 				zipOutputStream.finish(); // throws IOException
 			} catch ( IOException e ) {
-				throw new JakartaTransformException("Failed to complete output [ " + outputPath + " ]", e);
+				throw new JakartaTransformException("Failed to complete output [ " + inputPath + " ]", e);
 			}
 		}
 	}
 
 	protected void apply(
 		String inputPath, ZipInputStream zipInputStream,
-		String outputPath, ZipOutputStream zipOutputStream) throws JakartaTransformException {
+		ZipOutputStream zipOutputStream) throws JakartaTransformException {
 
 		String prevName = null;
 		String inputName = null;
@@ -150,7 +149,8 @@ public class JarActionImpl extends ContainerActionImpl implements JarAction {
 						intInputLength = FileUtils.verifyArray(0, inputLength);
 					}
 
-					InputStreamData outputData = acceptedAction.apply(inputName, zipInputStream, intInputLength);
+					InputStreamData outputData =
+						acceptedAction.apply(inputName, zipInputStream, intInputLength);
 
 					recordTransform(acceptedAction, inputName);
 
@@ -169,20 +169,13 @@ public class JarActionImpl extends ContainerActionImpl implements JarAction {
 		} catch ( IOException e ) {
 			String message;
 			if ( inputName != null ) { // Actively processing an entry.
-				message = "Failure while processing [ " + inputName + " ] from [ " + inputPath + " ] to [ " + outputPath + " ]";
+				message = "Failure while processing [ " + inputName + " ] from [ " + inputPath + " ]";
 			} else if ( prevName != null ) { // Moving to a new entry but not the first entry.
-				message = "Failure after processing [ " + prevName + " ] from [ " + inputPath + " ] to [ " + outputPath + " ]";
+				message = "Failure after processing [ " + prevName + " ] from [ " + inputPath + " ]";
 			} else { // Moving to the first entry.
-				message = "Failed to process first entry of [ " + inputPath + " ] to [ " + outputPath + " ]";
+				message = "Failed to process first entry of [ " + inputPath + " ]";
 			}
 			throw new JakartaTransformException(message, e);
 		}
-	}
-
-	// Byte base JAR conversion is not supported.
-
-	@Override
-	public ByteData apply(String inputName, byte[] inputBytes, int inputLength) throws JakartaTransformException {
-		throw new UnsupportedOperationException();
 	}
 }

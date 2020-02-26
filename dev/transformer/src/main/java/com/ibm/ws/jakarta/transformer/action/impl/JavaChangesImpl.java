@@ -41,7 +41,7 @@ public class JavaChangesImpl extends ChangesImpl implements JavaChanges {
     }
 
 	@Override
-	public void display(PrintStream printStream) {
+	public void displayChanges(PrintStream printStream, String inputPath, String outputPath) {
 		// EMPTY
 	}
 }

@@ -15,5 +15,5 @@ public interface Changes {
 
 	void clearChanges();
 
-	void display(PrintStream printStream);
+	void displayChanges(PrintStream printStream, String inputPath, String outputPath);
 }

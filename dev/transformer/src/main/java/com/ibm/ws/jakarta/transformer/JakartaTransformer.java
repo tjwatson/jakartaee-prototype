@@ -47,7 +47,7 @@ public class JakartaTransformer {
     public static final int PARSE_ERROR_RC = 1;
     public static final int RULES_ERROR_RC = 2;
     public static final int TRANSFORM_ERROR_RC = 3;
-    public static final int ACTION_ERROR_RC = 4;
+    public static final int FILE_TYPE_ERROR_RC = 4;
 
     public static void main(String[] args) throws Exception {
         JakartaTransformer jTrans =
@@ -197,32 +197,7 @@ public class JakartaTransformer {
         INVERT("i", "invert", "Invert transformation rules",
            	!OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
 
-//      CLASS("c", "class", "Input class",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        MANIFEST("m", "manifest", "Input manifest",
-//            OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        FEATURE("f", "feature", "Input feature manifest",
-//            OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        SERVICE_CONFIG("s", "service config", "Input service configuration",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        XML("x", "xml", "Input XML",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-
-//        ZIP  ("z", "zip",   "Input zip archive",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        JAR  ("j", "jar",   "Input java archive",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        WAR  ("w", "war",   "Input web application archive",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        RAR  ("r", "rar",   "Input resource archive",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//        EAR  ("e", "ear",   "Input enterprise application archive",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-//
-//        OUTPUT("o", "output", "Output file",
-//        	OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
-
-        ACTION("a", "action", "Action",
+        FILE_TYPE("t", "type", "Input file type",
             OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
         OVERWRITE("o", "overwrite", "Overwrite",
             !OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
@@ -353,7 +328,7 @@ public class JakartaTransformer {
     	String[] useArgs = parsedArgs.getArgs();
     	if ( useArgs != null ) {
         	if (useArgs.length > 0) {
-        		return FileUtils.normalize(useArgs[0]);
+        		return useArgs[0];
         	} 
     	}
     	return null;
@@ -368,20 +343,10 @@ public class JakartaTransformer {
         String[] useArgs = parsedArgs.getArgs();
         if ( useArgs != null ) {
             if (useArgs.length > 1) {
-                return FileUtils.normalize(useArgs[1]);
-            } 
+            	return useArgs[1];
+            }
         }
-
-        info("Output file not specified.\n");
-
-        final String OUTPUT_PREFIX = "output_";
-        String inputFileName = getInputFileName();
-        int indexOfLastSlash = inputFileName.lastIndexOf('/');
-        if (indexOfLastSlash == -1 ) {
-            return OUTPUT_PREFIX + inputFileName; 
-        } else {
-            return inputFileName.substring(0, indexOfLastSlash+1) + OUTPUT_PREFIX + inputFileName.substring(indexOfLastSlash+1);
-        }
+        return null;
     }
     
     protected boolean hasOption(AppOption option) {
@@ -409,9 +374,9 @@ public class JakartaTransformer {
 
             helpFormatter.printHelp(
                 helpWriter,
-                HelpFormatter.DEFAULT_WIDTH,
-                JakartaTransformer.class.getName() + " [ options ]", // Command line syntax
-                "\nOptions:", // Header
+                HelpFormatter.DEFAULT_WIDTH + 5,
+                JakartaTransformer.class.getName() + " input [ output ] [ options ]", // Command line syntax
+                "Options:", // Header
                 getAppOptions(),
                 HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD,
                 "\n", // Footer
@@ -434,19 +399,19 @@ public class JakartaTransformer {
     	URL rulesUrl;
         String rulesReference = getOptionValue(ruleOption);
         if ( rulesReference != null ) {
-            info("Using external [ " + ruleOption + " ]: [ " + rulesReference + " ]\n");
+            info("Using external [ %s ]: [ %s ]\n", ruleOption, rulesReference);
             URI currentDirectoryUri = IO.work.toURI();
             rulesUrl = URIUtil.resolve(currentDirectoryUri, rulesReference).toURL();
-            info("External [ " + ruleOption + " ] URL [ " + rulesUrl + " ]\n");
+            info("External [ %s ] URL [ %s ]\n", ruleOption, rulesUrl);
         } else {
             rulesReference = defaultReference;
-            info("Using internal [ " + ruleOption + " ]: [ " + rulesReference + " ]\n");
+            info("Using internal [ %s ]: [ %s ]\n", ruleOption, rulesReference);
             rulesUrl = getClass().getResource(rulesReference);
             if ( rulesUrl == null ) {
-        		info("Default [ " + AppOption.RULES_SELECTIONS + " ] were not found [ " + rulesReference + " ]");
+        		info("Default [ %s ] were not found [ %s ]", AppOption.RULES_SELECTIONS, rulesReference);
         		return null;
             } else {
-                info("Default [ " + ruleOption + " ] URL [ " + rulesUrl + " ]\n");
+                info("Default [ %s ] URL [ %s ]\n", ruleOption, rulesUrl);
             }
         }
 
@@ -529,7 +494,7 @@ public class JakartaTransformer {
         	if ( selectionProperties != null ) {
         		JakartaTransformProperties.setSelections(includes, excludes, selectionProperties);
         	} else {
-        		info("All resources will be selected");
+        		info("All resources will be selected\n");
         	}
 
         	if ( renameProperties != null ) {
@@ -539,21 +504,21 @@ public class JakartaTransformer {
         		}
         		packageRenames = renames;
         	} else {
-        		info("No package renames are available");
+        		info("No package renames are available\n");
         		packageRenames = null;
         	}
 
         	if ( versionProperties != null ) {
         		packageVersions = JakartaTransformProperties.getPackageVersions(versionProperties);
         	} else {
-        		info("Package versions will not be updated");
+        		info("Package versions will not be updated\n");
         	}
 
         	if ( updateProperties != null ) {
         		bundleUpdates = JakartaTransformProperties.getBundleUpdates(updateProperties);
         		// throws IllegalArgumentException
         	} else {
-        		info("Bundle identities will not be updated");
+        		info("Bundle identities will not be updated\n");
         	}
         	
         	return ( packageRenames != null );
@@ -650,26 +615,49 @@ public class JakartaTransformer {
     	}
 
         protected boolean setInput() {
-        	inputName = getInputFileName();
-            if ( inputName == null ) {
+        	String useInputName = getInputFileName();
+            if ( useInputName == null ) {
                 error("No input file was specified\n");
                 return false;
             }
 
-            inputPath = inputFile.getAbsolutePath();
-            info("      [ %s ]", inputPath);
-
+            inputName = FileUtils.normalize(useInputName);
             inputFile = new File(inputName);
+            inputPath = inputFile.getAbsolutePath();
+
             if ( !inputFile.exists() ) {
-                error("Input does not exist [ " + inputPath + " ]\n");
+                error("Input does not exist [ %s ] [ %s ]\n", inputName, inputPath);
                 return false;
             }
 
+            info("Input     [ %s ]\n", inputName);
+            info("          [ %s ]\n", inputPath);
             return true;
         }
 
+        public static final String OUTPUT_PREFIX = "output_";
+
         protected boolean setOutput() {
-            outputName = getOutputFileName();
+        	String useOutputName = getOutputFileName();
+
+        	if ( useOutputName != null ) {
+        		useOutputName = FileUtils.normalize(useOutputName);
+        	} else {
+        		info("Output file not specified.\n");
+
+        		int indexOfLastSlash = inputName.lastIndexOf('/');
+        		if ( indexOfLastSlash == -1 ) {
+        			useOutputName =
+        				OUTPUT_PREFIX + inputName;
+
+        		} else {
+        			useOutputName =
+        				inputName.substring(0, indexOfLastSlash+1) +
+        				OUTPUT_PREFIX +
+        				inputName.substring(indexOfLastSlash+1);
+        		}
+        	}
+        	outputName = useOutputName;
             outputFile = new File(outputName);
             outputPath = outputFile.getAbsolutePath();
 
@@ -677,9 +665,9 @@ public class JakartaTransformer {
 
             if ( outputFile.exists() ) {
             	if ( allowOverwrite ) {
-                    info("Output exists and will be overwritten [ " + outputPath + " ]\n");
+                    info("Output exists and will be overwritten [ %s ]\n", outputPath);
             	} else {
-            		error("Output already exists [ " + outputPath + " ]\n");
+            		error("Output already exists [ %s ]\n", outputPath);
             		return false;
             	}
             } else {
@@ -732,13 +720,15 @@ public class JakartaTransformer {
         		jarAction.addAction(manifestAction);
         		jarAction.addAction(featureAction);
         		jarAction.addAction(nullAction);
+
+        		rootAction = useRootAction;
         	}
 
         	return rootAction;
         }
 
         public boolean acceptAction() {
-        	String actionName = getOptionValue(AppOption.ACTION);
+        	String actionName = getOptionValue(AppOption.FILE_TYPE);
 
         	if ( actionName != null ) {
         		for ( ActionImpl action : getRootAction().getActions() ) {
@@ -766,10 +756,10 @@ public class JakartaTransformer {
         protected void transform()
         	throws JakartaTransformException {
 
-        	acceptedAction.apply(inputName, inputFile, outputName, outputFile);
+        	acceptedAction.apply(inputName, inputFile, outputFile);
 
     		if ( acceptedAction.hasChanges() ) {
-    			acceptedAction.getChanges().display( getInfoStream() );
+    			acceptedAction.getChanges().displayChanges( getInfoStream(), inputPath, outputPath );
     		}
         }
     }
@@ -796,7 +786,7 @@ public class JakartaTransformer {
         if ( !options.setInput() ) { 
             return TRANSFORM_ERROR_RC;
         }
-         
+
         if ( !options.setOutput() ) {
             return TRANSFORM_ERROR_RC;
         }
@@ -818,7 +808,7 @@ public class JakartaTransformer {
 
         if ( !options.acceptAction() ) {
         	info("No action selected");
-        	return ACTION_ERROR_RC;
+        	return FILE_TYPE_ERROR_RC;
         }
 
         try {

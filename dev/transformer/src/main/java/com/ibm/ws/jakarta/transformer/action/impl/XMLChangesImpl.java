@@ -38,7 +38,7 @@ public class XMLChangesImpl extends ChangesImpl implements XMLChanges {
 	//
 
 	@Override
-	public void display(PrintStream printStream) {
+	public void displayChanges(PrintStream printStream, String inputPath, String outputPath) {
 		// EMPTY
 	}
 }
