@@ -22,6 +22,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.ibm.ws.jakarta.transformer.action.ActionType;
 import com.ibm.ws.jakarta.transformer.action.BundleData;
 import com.ibm.ws.jakarta.transformer.action.impl.ActionImpl;
 import com.ibm.ws.jakarta.transformer.action.impl.ClassActionImpl;
@@ -416,7 +417,13 @@ public class JakartaTransformer {
                 "\n", // Footer
                 !AUTO_USAGE);
 
+            helpWriter.println("Actions:");
+            for ( ActionType actionType : ActionType.values() ) {
+            	helpWriter.println("  [ " + actionType.name() + " ]");
+            }
+
             helpWriter.flush();
+
         }
     }
 
