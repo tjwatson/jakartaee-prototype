@@ -24,7 +24,7 @@ public class JavaActionImpl extends ActionImpl implements JavaAction {
 		SelectionRuleImpl selectionRule,
 		SignatureRuleImpl signatureRule) {
 
-		super(logger, buffer, selectionRule, signatureRule);
+        super(logger, buffer, selectionRule, signatureRule);
 	}
 
 	//

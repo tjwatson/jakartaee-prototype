@@ -727,9 +727,9 @@ public class JakartaTransformer {
         		jarAction.addAction(nullAction);
 
         		rootAction = useRootAction;
-        	}
+            }
 
-        	return rootAction;
+            return rootAction;
         }
 
         public boolean acceptAction() {

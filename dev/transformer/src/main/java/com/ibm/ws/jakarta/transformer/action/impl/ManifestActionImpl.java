@@ -420,95 +420,96 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 	 * @return String with version numbers of first package replaced by the newVersion.
 	 */
 	protected String replacePackageVersion(String text, String newVersion) {
-		//verbose("replacePackageVersion: ( %s )\n",  text );
+	    //verbose("replacePackageVersion: ( %s )\n",  text );
 
-		String packageText = getPackageAttributeText(text);
-		if ( packageText == null ) {
-			return text;
-		} else if ( packageText.isEmpty() ) {
-			return text;
-		}
+	    String packageText = getPackageAttributeText(text);
 
-		//verbose("replacePackageVersion: (packageText: %s )\n", packageText);
+	    if ( packageText == null ) {
+	        return text;
+	    } else if ( packageText.isEmpty() ) {
+	        return text;
+	    }
 
-		final String VERSION = "version";
-		final int VERSION_LEN = 7;
-		final char QUOTE_MARK = '\"';
+	    //verbose("replacePackageVersion: (packageText: %s )\n", packageText);
 
-		int versionIndex = packageText.indexOf(VERSION);
-		if ( versionIndex == -1 ) { 
-			return text;  // nothing to replace
-		}
+	    final String VERSION = "version";
+	    final int VERSION_LEN = 7;
+	    final char QUOTE_MARK = '\"';
 
-		// The actual version numbers are after the "version" and the "=" and between quotation marks ("").
-		// Ignore white space that occurs around the "=", but do not ignore white space between quotation marks.
-		// Everything inside the "" is part of the version and will be replaced.
-    	boolean foundEquals = false;
-    	boolean foundQuotationMark = false; 
-    	int versionBeginIndex = -1;
-    	int versionEndIndex = -1;
+	    int versionIndex = packageText.indexOf(VERSION);
+	    if ( versionIndex == -1 ) { 
+	        return text;  // nothing to replace
+	    }
 
-		// skip to actual version number which is after "=".  Version begins inside double quotation marks 
-        for (int i=versionIndex + VERSION_LEN; i < packageText.length(); i++) {
-        	char ch = packageText.charAt(i);
+	    // The actual version numbers are after the "version" and the "=" and between quotation marks ("").
+	    // Ignore white space that occurs around the "=", but do not ignore white space between quotation marks.
+	    // Everything inside the "" is part of the version and will be replaced.
+	    boolean foundEquals = false;
+	    boolean foundQuotationMark = false; 
+	    int versionBeginIndex = -1;
+	    int versionEndIndex = -1;
 
-        	// skip white space until we find equals sign
-        	if ( !foundEquals ) {
-        		if (ch == '=') {
-        			foundEquals = true;
-        			continue;
-        		}
+	    // skip to actual version number which is after "=".  Version begins inside double quotation marks 
+	    for (int i=versionIndex + VERSION_LEN; i < packageText.length(); i++) {
+	        char ch = packageText.charAt(i);
 
-        		if ( Character.isWhitespace(ch)) {
-        			continue;
-        		}
-        		error("Syntax error found non-white-space character before equals sign in version {%s}\n", packageText);
-        		return text;   // Syntax error - returning original text
-        	}
+	        // skip white space until we find equals sign
+	        if ( !foundEquals ) {
+	            if (ch == '=') {
+	                foundEquals = true;
+	                continue;
+	            }
 
-        	// Skip white space past the equals sign
-        	if ( Character.isWhitespace(ch) ) {
-    			// verbose("ch is \'%s\' and is whitespace.\n", ch);
-    			continue;
-    		}
+	            if ( Character.isWhitespace(ch)) {
+	                continue;
+	            }
+	            error("Syntax error found non-white-space character before equals sign in version {%s}\n", packageText);
+	            return text;   // Syntax error - returning original text
+	        }
 
-        	// When we find the quotation marks past the equals sign, we are finished.
-        	if ( !foundQuotationMark ) {
-        		if ( ch == QUOTE_MARK ) {
-        			versionBeginIndex = i+1;  // just past the 1st quotation mark
+	        // Skip white space past the equals sign
+	        if ( Character.isWhitespace(ch) ) {
+	            // verbose("ch is \'%s\' and is whitespace.\n", ch);
+	            continue;
+	        }
 
-        			versionEndIndex = packageText.indexOf('\"', i+1);
-        			if (versionEndIndex == -1) {
-        				error("Syntax error, package version does not have closing quotation mark\n");
-        				return text; // Syntax error - returning original text
-        			}
-        			versionEndIndex--; // just before the 2nd quotation mark
+	        // When we find the quotation marks past the equals sign, we are finished.
+	        if ( !foundQuotationMark ) {
+	            if ( ch == QUOTE_MARK ) {
+	                versionBeginIndex = i+1;  // just past the 1st quotation mark
 
-        			//verbose("versionBeginIndex = [%s]\n", versionBeginIndex);
-            		//verbose("versionEndIndex = [%s]\n", versionEndIndex);
-        			foundQuotationMark = true; // not necessary, just leave loop
-        			break;
-        		}
+	                versionEndIndex = packageText.indexOf('\"', i+1);
+	                if (versionEndIndex == -1) {
+	                    error("Syntax error, package version does not have closing quotation mark\n");
+	                    return text; // Syntax error - returning original text
+	                }
+	                versionEndIndex--; // just before the 2nd quotation mark
 
-        		if ( Character.isWhitespace(ch) ) {
-        			continue;
-        		}
+	                //verbose("versionBeginIndex = [%s]\n", versionBeginIndex);
+	                //verbose("versionEndIndex = [%s]\n", versionEndIndex);
+	                foundQuotationMark = true; // not necessary, just leave loop
+	                break;
+	            }
 
-        		error("Syntax error found non-white-space character after equals sign  in version {%s}\n", packageText);
-        		return text;   // Syntax error - returning original text
-        	}
-        }
+	            if ( Character.isWhitespace(ch) ) {
+	                continue;
+	            }
 
-    	//String oldVersion = packageText.substring(versionBeginIndex, versionEndIndex+1);
-    	//verbose("old version[ %s ] new version[ %s]\n", oldVersion, newVersion);
+	            error("Syntax error found non-white-space character after equals sign  in version {%s}\n", packageText);
+	            return text;   // Syntax error - returning original text
+	        }
+	    }
 
-    	String head = text.substring(0, versionBeginIndex);
-    	String tail = text.substring(versionEndIndex+1);
+	    //String oldVersion = packageText.substring(versionBeginIndex, versionEndIndex+1);
+	    //verbose("old version[ %s ] new version[ %s]\n", oldVersion, newVersion);
 
-    	String newText = head + newVersion + tail;
-    	//verbose("Old [%s] New [%s]\n", text , newText);
+	    String head = text.substring(0, versionBeginIndex);
+	    String tail = text.substring(versionEndIndex+1);
 
-		return newText;
+	    String newText = head + newVersion + tail;
+	    //verbose("Old [%s] New [%s]\n", text , newText);
+
+	    return newText;
 	}
 
 	//
@@ -548,18 +549,20 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 		// If an odd number of quotes are found, then the comma is in quotes and we need to find the next comma.
 		String packageText = text.substring(0, commaIndex+1);   
 		verbose("packageText [ %s ]\n", packageText);
-		boolean quotesAreEven = hasEvenNumberOfOccurrencesOfChar(packageText, '\"');
 
-		if ( !quotesAreEven ) {
-			commaIndex = text.indexOf(',', packageText.length());
-			if ( commaIndex == -1 ) {
-				packageText = text;  // No trailing comma indicates embedding text is the package text.
-			} else {
-			   verbose("Updating packageText [ %s ]\n", packageText);
-			   verbose("commaIndex is [ %d ]\n", commaIndex);
-			   packageText = text.substring(0, commaIndex+1);
-			   verbose("new      packageText [ %s ]\n", packageText);
-			}
+		while (!isPackageDelimitingComma(text, packageText, commaIndex)) {
+		    commaIndex = text.indexOf(',', packageText.length());
+		    if ( commaIndex == -1 ) {
+		        packageText = text;  // No trailing comma indicates embedding text is the package text.
+		        break;
+		    } else {
+		        packageText = text.substring(0, commaIndex+1);
+		    }
+		    
+		    // If there is a syntax error (missing closing quotes) return what we have
+		    if ( !hasEvenNumberOfOccurrencesOfChar(text, '\"') ) {
+		        break;
+		    }
 		}
 
 		verbose("getPackageAttributeText returning: [ %s ]\n", packageText);
@@ -570,18 +573,51 @@ public class ManifestActionImpl extends ActionImpl implements ManifestAction {
 	 * Tell if the first non-white space character of the parameter is a semi-colon.
 	 */
 	protected boolean firstCharIsSemicolon(String s) {
-		for ( int i=0; i < s.length(); i++ ) {
-			if ( Character.isWhitespace(s.charAt(i)) ) {
-				continue;
-			}
-			if ( s.charAt(i) == ';' ) {
-				return true;
-			}
-			return false;
-		}
-		return false;
+	    for ( int i=0; i < s.length(); i++ ) {
+	        if ( Character.isWhitespace(s.charAt(i)) ) {
+	            continue;
+	        }
+	        if ( s.charAt(i) == ';' ) {
+	            return true;
+	        }
+	        return false;
+	    }
+	    return false;
 	}
+	
+	protected int indexOfNextNonWhiteSpaceChar(String s, int currentIndex) {
+	    for ( int i=currentIndex; i < s.length(); i++ ) {
+	        if ( Character.isWhitespace(s.charAt(i)) ) {
+	            continue;
+	        }
+	        return i;
+	    }
+	    return -1;
+	}	
 
+	/**
+	 * 
+	 * @param testString - The entire remaining unprocessed text of a MANIFEST.MF attribute that immediately follows a package name
+	 * @param packageText - Text that immediately follows a package name in a MANIFEST.MF attribute
+	 * @param indexOfComma
+	 * @return
+	 */
+    private boolean isPackageDelimitingComma(String testString, 
+                                             String packageText, 
+                                             int indexOfComma) {
+        
+        int indexOfNextNonWhiteSpaceCharAfterComma = indexOfNextNonWhiteSpaceChar(testString, indexOfComma+1);
+        char characterAfterComma = testString.charAt(indexOfNextNonWhiteSpaceCharAfterComma);
+        if (Character.isAlphabetic(characterAfterComma)) { 
+            if ( !hasEvenNumberOfOccurrencesOfChar(packageText, '\"') ) {
+                return false;
+           }
+            return true;
+        }
+
+        return false;
+    }	
+	
 	private boolean hasEvenNumberOfOccurrencesOfChar(String testString, char testChar) {
 		long occurrences = testString.chars().filter(ch -> ch == '\"').count();
 		return ((occurrences % 2 ) == 0);

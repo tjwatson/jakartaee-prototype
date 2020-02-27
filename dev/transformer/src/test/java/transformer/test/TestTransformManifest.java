@@ -376,6 +376,7 @@ public class TestTransformManifest {
     String newVersion = "[4.0,5)";
 
 	// Embedding text is the input for each test
+    String embeddingText0 = "; location:=\"dev/api/spec/,lib/\"; mavenCoordinates=\"javax.servlet:javax.servlet-api:4.0.1\"; version=\"[1.0.0,1.0.200)\"";    
 	String embeddingText1 = ";version=\"[2.6,3)\",javax.servlet.annotation;version=\"[2.6,3)\"";
 	String embeddingText2 = ";version= \"[2.6,3)\",javax.servlet.annotation;version=\"[2.6,3)\"";
 	String embeddingText3 = ";version =\"[2.6,3)\",javax.servlet.annotation;version=\"[2.6,3)\"";
@@ -392,6 +393,7 @@ public class TestTransformManifest {
 
 	// Expected results: When replacing the version, the expected result is the entire 
 	// embedding text with the version of the first package replaced with the new version.
+	String expectedResultText0_ReplaceVersion = "; location:=\"dev/api/spec/,lib/\"; mavenCoordinates=\"javax.servlet:javax.servlet-api:4.0.1\"; version=\"" + newVersion +"\"";
 	String expectedResultText1_ReplaceVersion = ";version=\""+ newVersion + "\",javax.servlet.annotation;version=\"[2.6,3)\"";
 	String expectedResultText2_ReplaceVersion = ";version= \""+ newVersion + "\",javax.servlet.annotation;version=\"[2.6,3)\"";
 	String expectedResultText3_ReplaceVersion = ";version =\""+ newVersion + "\",javax.servlet.annotation;version=\"[2.6,3)\"";
@@ -588,6 +590,11 @@ public class TestTransformManifest {
 
 		String result;
 
+		result = manifestAction.callReplacePackageVersion(embeddingText0, newVersion);
+		assertEquals(expectedResultText0_ReplaceVersion,
+		        result,
+		        "Result not expected:\nexpected: " + expectedResultText0_ReplaceVersion + "\nactual:" + result + "\n");    
+
 		result = manifestAction.callReplacePackageVersion(embeddingText1, newVersion);
 		assertEquals(expectedResultText1_ReplaceVersion,
 				     result,
@@ -638,6 +645,7 @@ public class TestTransformManifest {
 				     result,
 				     "Result not expected:\nexpected: " + expectedResultText11_ReplaceVersion + "\nactual:" + result + "\n");
 		
+        // Check syntax error in Manifest (Case of no closing quotes)
 		result = manifestAction.callReplacePackageVersion(embeddingText12, newVersion);
 		assertEquals(expectedResultText12_ReplaceVersion,
 				     result,
@@ -704,7 +712,8 @@ public class TestTransformManifest {
 		assertEquals(expectedResultText11_GetPackageText,
 				     result,
 				     "Result not expected:\nexpected: " + expectedResultText11_GetPackageText + "\nactual:" + result + "\n");
-		
+
+		// Check syntax error in Manifest (Case of no closing quotes)		
 		result = manifestAction.callGetPackageAttributeText(embeddingText12);
 		assertEquals(expectedResultText12_GetPackageText,
 				     result,
