@@ -981,6 +981,10 @@ public class ClassActionImpl extends ActionImpl implements ClassAction {
 						if ( outputUtf8 == null ) {
 							transformCase = "resource";  // url format (slashes)
 							outputUtf8 = transformConstantAsBinaryType(inputUtf8, SignatureRule.ALLOW_SIMPLE_SUBSTITUTION);
+	                        if ( outputUtf8 == null ) {
+	                        	transformCase = "Direct";
+	                        	outputUtf8 = transformDirectString(inputUtf8);
+	                        }
 						}
 					}
 
@@ -1002,6 +1006,10 @@ public class ClassActionImpl extends ActionImpl implements ClassAction {
                     if ( outputString == null ) {
                         transformCase = "String";   // url format (slashes)
                         outputString = transformConstantAsBinaryType(inputString, SignatureRule.ALLOW_SIMPLE_SUBSTITUTION);
+                        if ( outputString == null ) {
+                        	transformCase = "Direct";
+                        	outputString = transformDirectString(inputString);
+                        }
                     }
 					if ( outputString != null ) {
 						constants.entry(constantNo, new StringInfo( constants.utf8Info(outputString) ) );

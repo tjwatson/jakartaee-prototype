@@ -92,6 +92,14 @@ public class JakartaTransformProperties {
 		return packageRenames;
 	}
 
+	public static Map<String, String> getDirectStrings(UTF8Properties directProperties) {
+		Map<String, String> directStrings = new HashMap<String, String>( directProperties.size() );
+		for ( Map.Entry<Object, Object> directEntry : directProperties.entrySet() ) {
+			directStrings.put( (String) directEntry.getKey(), (String) directEntry.getValue() );
+		}
+		return directStrings;
+	}
+
 	public static Map<String, String> invert(Map<String, String> properties) {
 		Map<String, String> inverseProperties = new HashMap<>( properties.size() );
 		for ( Map.Entry<String, String> entry : properties.entrySet() ) {

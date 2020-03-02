@@ -173,9 +173,9 @@ public class ClassChangesImpl extends ChangesImpl implements ClassChanges {
 	public void addModifiedConstant() {
 		modifiedConstants++;
 	}
-	
+
 	//
-	
+
 	@Override
 	public void displayChanges(PrintStream printStream, String inputPath, String outputPath) {
 		printStream.printf(
@@ -186,15 +186,15 @@ public class ClassChangesImpl extends ChangesImpl implements ClassChanges {
 			"Output name [ %s ] as [ %s ]\n",
 			getOutputResourceName(), outputPath );
 
-		printStream.printf( "Class name [ %s ] [ %s ]\n",
-			getInputClassName(),
-			getOutputClassName() );
+		printStream.printf(
+			"Class name [ %s ] [ %s ]\n",
+			getInputClassName(), getOutputClassName() );
 
 		String useInputSuperName = getInputSuperName();
 		if ( useInputSuperName != null ) {
-			printStream.printf( "Super class name [ %s ] [ %s ]\n",
-				useInputSuperName,
-				getOutputSuperName() );
+			printStream.printf(
+				"Super class name [ %s ] [ %s ]\n",
+				useInputSuperName, getOutputSuperName() );
 		}
 
 		printStream.printf( "Modified interfaces [ %s ]\n", getModifiedInterfaces() );

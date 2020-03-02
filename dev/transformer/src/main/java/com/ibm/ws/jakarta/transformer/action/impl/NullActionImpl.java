@@ -59,7 +59,6 @@ public class NullActionImpl extends ActionImpl implements NullAction {
 
 		clearChanges();
 		setResourceNames(inputName, inputName);
-
 		return new ByteData(inputName, inputBytes, 0, inputLength);
 	}
 }

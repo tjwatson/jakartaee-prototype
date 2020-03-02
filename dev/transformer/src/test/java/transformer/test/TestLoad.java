@@ -13,9 +13,6 @@ public class TestLoad {
 	public static final String RULES_RENAMES_PATH =
 		JakartaTransformer.DEFAULT_RENAMES_REFERENCE;
 
-	public static final String RULES_SELECTIONS_PATH =
-		JakartaTransformer.DEFAULT_SELECTIONS_REFERENCE;
-
 	public static final String RULES_VERSIONS_PATH =
 		JakartaTransformer.DEFAULT_VERSIONS_REFERENCE;
 
@@ -32,7 +29,6 @@ public class TestLoad {
 
 	@Test
 	public void testRulesLoad() throws IOException {
-		testLoad(RULES_SELECTIONS_PATH);
 		testLoad(RULES_RENAMES_PATH);
 		testLoad(RULES_VERSIONS_PATH);
 	}

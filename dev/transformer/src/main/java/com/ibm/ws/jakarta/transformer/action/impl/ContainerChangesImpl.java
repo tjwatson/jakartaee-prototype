@@ -188,23 +188,23 @@ public class ContainerChangesImpl extends ChangesImpl implements ContainerChange
 
 		stream.printf( DASH_LINE );
 		stream.printf( DATA_LINE,
-				"All Resources", this.getAllResources(),
-				"Unselected", getAllUnselected(),
-				"Selected", getAllSelected() );
+			"All Resources", this.getAllResources(),
+			"Unselected", getAllUnselected(),
+			"Selected", getAllSelected() );
 
 		stream.printf( DASH_LINE );
 		stream.printf( DATA_LINE,
-				"All Actions", getAllSelected(),
-				"Unchanged", getAllUnchanged(),
-				"Changed", getAllChanged());
+			"All Actions", getAllSelected(),
+			"Unchanged", getAllUnchanged(),
+			"Changed", getAllChanged());
 
 		for ( String actionName : getActionNames() ) {
 			int useUnchangedByAction = getUnchanged(actionName); 
 			int useChangedByAction = getChanged(actionName);
 			stream.printf( DATA_LINE,
-					actionName, useUnchangedByAction + useChangedByAction,
-					"Unchanged", useUnchangedByAction,
-					"Changed", useChangedByAction);
+				actionName, useUnchangedByAction + useChangedByAction,
+				"Unchanged", useUnchangedByAction,
+				"Changed", useChangedByAction);
 		}
 
 		stream.printf( DASH_LINE );

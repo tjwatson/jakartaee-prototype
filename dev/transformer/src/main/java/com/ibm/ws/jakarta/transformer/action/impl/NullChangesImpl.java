@@ -14,11 +14,8 @@ public class NullChangesImpl extends ChangesImpl implements NullChanges {
 	@Override
 	public void displayChanges(PrintStream printStream, String inputPath, String outputPath) {
 		printStream.printf(
-			"Input  [ %s ] as [ %s ]\n",
-       		getInputResourceName(), inputPath);
-
+			"Input  [ %s ] as [ %s ]\n", getInputResourceName(), inputPath);
 		printStream.printf(
-			"Output [ %s ] as [ %s ]\n",
-	       	getOutputResourceName(), outputPath);
+			"Output [ %s ] as [ %s ]\n", getOutputResourceName(), outputPath);
 	}
 }

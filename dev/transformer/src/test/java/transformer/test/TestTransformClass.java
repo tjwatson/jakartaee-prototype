@@ -61,9 +61,10 @@ public class TestTransformClass {
 		LoggerImpl logger,
 		Map<String, String> usePackageRenames,
 		Map<String, String> usePackageVersions,
-		Map<String, BundleData> bundleData) {
+		Map<String, BundleData> bundleData,
+		Map<String, String> directStrings) {
 
-		return new SignatureRuleImpl( logger, usePackageRenames, usePackageVersions, bundleData );
+		return new SignatureRuleImpl( logger, usePackageRenames, usePackageVersions, bundleData, directStrings );
 	}
 
 	//
@@ -147,7 +148,7 @@ public class TestTransformClass {
 				logger,
 				createBuffer(),
 				createSelectionRule( logger, getIncludes(), getExcludes() ),
-				createSignatureRule( logger, getPackageRenames(), null, null ) );
+				createSignatureRule( logger, getPackageRenames(), null, null, null ) );
 		}
 
 		return jakartaJarAction;
@@ -164,7 +165,7 @@ public class TestTransformClass {
 				logger,
 				createBuffer(),
 				createSelectionRule( logger, getIncludes(), getExcludes() ),
-				createSignatureRule( logger, invertedRenames, null, null ) );
+				createSignatureRule( logger, invertedRenames, null, null, null ) );
 		}
 
 		return javaxJarAction;
@@ -230,7 +231,7 @@ public class TestTransformClass {
 
 	public static final String TEST_DATA_RESOURCE_NAME = "transformer/test/data";
 	public static final String ANNOTATED_SERVLET_RESOURCE_NAME = "AnnotatedServlet.class";
-	
+
 	public static final String TRANSFORMER_RESOURCE_NAME = "com/ibm/ws/jakarta/transformer";
 
 	public static Map<String, String> getStandardRenames() throws IOException {
@@ -261,7 +262,7 @@ public class TestTransformClass {
 			logger,
 			createBuffer(),
 			createSelectionRule( logger, Collections.emptySet(), Collections.emptySet() ),
-			createSignatureRule( logger, getStandardRenames(), null, null ) );
+			createSignatureRule( logger, getStandardRenames(), null, null, null ) );
 		// 'getStandardRenames' throws IOException
 	}
 
@@ -295,5 +296,53 @@ public class TestTransformClass {
 		System.out.println("Modified methods [ " + classChanges.getModifiedMethods() + " ]");
 		System.out.println("Modified constants [ " + classChanges.getModifiedConstants() + " ]");
 		System.out.println("Modified attributes [ " + classChanges.getModifiedAttributes() + " ]");
+	}
+
+	//
+
+	public static final Map<String, String> DIRECT_STRINGS;
+	static {
+		DIRECT_STRINGS = new HashMap<String, String>();
+		DIRECT_STRINGS.put("DIRECT_1", "DIRECT_X"); // String value update // 2 hits
+		DIRECT_STRINGS.put("DIRECT21", "DIRECT21"); // Variable name update // 2 hits
+
+		DIRECT_STRINGS.put("Sample value 1", "Sample value 2"); // String constant reference update // 1 hit
+		DIRECT_STRINGS.put("Sample", "Official"); // String constant reference update (not found) // 0 hits
+		DIRECT_STRINGS.put("value", "product"); // String constant reference update (not found) // 0 hits
+	}
+
+	public static final Map<String, String> getDirectStrings() {
+		return DIRECT_STRINGS;
+	}
+
+	public ClassActionImpl createDirectClassAction() {
+		LoggerImpl logger =
+			createLogger( System.out, !LoggerImpl.IS_TERSE, LoggerImpl.IS_VERBOSE );
+
+		return new ClassActionImpl(
+			logger,
+			createBuffer(),
+			createSelectionRule( logger, Collections.emptySet(), Collections.emptySet() ),
+			createSignatureRule( logger, Collections.emptyMap(), null, null, getDirectStrings() ) );
+	}
+
+	public static final String DIRECT_STRINGS_RESOURCE_NAME = "Sample_DirectStrings.class";
+
+	@Test
+	public void testDirectStrings() throws JakartaTransformException, IOException {
+		ClassAction classAction = createDirectClassAction();
+
+		String resourceName = TEST_DATA_RESOURCE_NAME + '/' + DIRECT_STRINGS_RESOURCE_NAME;
+		InputStream inputStream = getResourceStream(resourceName); // throws IOException
+
+		@SuppressWarnings("unused")
+		InputStreamData outputStreamData = classAction.apply(resourceName, inputStream); // throws JakartaTransformException
+		display( classAction.getChanges() );
+
+		int expectedChanges = 5;
+		int actualChanges = classAction.getChanges().getModifiedConstants(); 
+		Assertions.assertEquals(
+			expectedChanges, actualChanges, 
+			"Incorrect count of constant changes");
 	}
 }

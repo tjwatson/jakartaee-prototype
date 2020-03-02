@@ -44,9 +44,10 @@ public class TestTransformServiceConfig {
 		LoggerImpl logger,
 		Map<String, String> usePackageRenames,
 		Map<String, String> usePackageVersions,
-		Map<String, BundleData> bundleData) {
+		Map<String, BundleData> bundleData,
+		Map<String, String> directStrings) {
 
-		return new SignatureRuleImpl( logger, usePackageRenames, usePackageVersions, bundleData );
+		return new SignatureRuleImpl( logger, usePackageRenames, usePackageVersions, bundleData, directStrings );
 	}
 
 	//
@@ -117,7 +118,7 @@ public class TestTransformServiceConfig {
 					logger,
 					createBuffer(),
 					createSelectionRule( logger, getIncludes(), getExcludes() ),
-					createSignatureRule( logger, getPackageRenames(), null, null ) );
+					createSignatureRule( logger, getPackageRenames(), null, null, null ) );
 		}
 		return jakartaServiceAction;
 	}
@@ -131,7 +132,7 @@ public class TestTransformServiceConfig {
 					logger,
 					createBuffer(),
 					createSelectionRule( logger, getIncludes(), getExcludes() ),
-					createSignatureRule( logger, invertedRenames, null, null ) );
+					createSignatureRule( logger, invertedRenames, null, null, null ) );
 		}
 		return javaxServiceAction;
 	}

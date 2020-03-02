@@ -31,7 +31,8 @@ public class SignatureRuleImpl implements SignatureRule {
 
 		Map<String, String> renames,
 		Map<String, String> versions,
-		Map<String, BundleData> bundleUpdates) {
+		Map<String, BundleData> bundleUpdates,
+		Map<String, String> directStrings) {
 
 		this.logger = logger;
 
@@ -69,7 +70,15 @@ public class SignatureRuleImpl implements SignatureRule {
 			useBundleUpdates = Collections.emptyMap();
 		}
 		this.bundleUpdates = useBundleUpdates;
-		
+
+		Map<String, String> useDirectStrings;
+		if ( directStrings == null ) {
+			useDirectStrings = Collections.emptyMap();
+		} else {
+			useDirectStrings = new HashMap<String, String>( directStrings );
+		}
+		this.directStrings = useDirectStrings;
+
 		this.unchangedBinaryTypes = new HashSet<>();
 		this.changedBinaryTypes = new HashMap<>();
 
@@ -123,6 +132,15 @@ public class SignatureRuleImpl implements SignatureRule {
 	@Override
 	public BundleData getBundleUpdate(String symbolicName) {
 		return bundleUpdates.get(symbolicName);
+	}
+
+	//
+
+	private final Map<String, String> directStrings;
+
+	@Override
+	public String getDirectString(String initialValue) {
+		return directStrings.get(initialValue);
 	}
 
 	//

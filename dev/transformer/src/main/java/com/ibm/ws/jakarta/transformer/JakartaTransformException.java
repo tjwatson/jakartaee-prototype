@@ -1,7 +1,5 @@
 package com.ibm.ws.jakarta.transformer;
 
-import java.io.IOException;
-
 public class JakartaTransformException extends Exception {
 	private static final long serialVersionUID = 1L;
 

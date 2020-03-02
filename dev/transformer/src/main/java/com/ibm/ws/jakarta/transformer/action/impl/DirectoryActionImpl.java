@@ -20,6 +20,12 @@ public class DirectoryActionImpl extends ContainerActionImpl implements Director
 
 	//
 
+	@Override
+	public ActionType getActionType() {
+		return ActionType.DIRECTORY;
+	}
+
+	@Override
 	public String getName() {
 		return "Directory Action";
 	}
@@ -48,7 +54,6 @@ public class DirectoryActionImpl extends ContainerActionImpl implements Director
 		throws JakartaTransformException {
 
 	    setResourceNames(inputPath, inputPath);
-
         transform(".", inputFile, outputFile);
 	}
 
@@ -79,10 +84,5 @@ public class DirectoryActionImpl extends ContainerActionImpl implements Director
 	    		recordTransform(selectedAction, inputPath);
 	    	}
 	    }
-	}
-
-	@Override
-	public ActionType getActionType() {
-		return ActionType.DIRECTORY;
 	}
 }

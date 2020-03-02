@@ -129,4 +129,8 @@ public interface SignatureRule {
 
 	ReferenceTypeSignature transform(ReferenceTypeSignature type);
 
+	//
+
+	String getDirectString(String initialValue);
+
 }

@@ -48,9 +48,10 @@ public class TestTransformManifest {
 		LoggerImpl logger,
 		Map<String, String> usePackageRenames,
 		Map<String, String> usePackageVersions,
-		Map<String, BundleData> bundleData) {
+		Map<String, BundleData> bundleData,
+		Map<String, String> directStrings) {
 
-		return new SignatureRuleImpl( logger, usePackageRenames, usePackageVersions, bundleData );
+		return new SignatureRuleImpl( logger, usePackageRenames, usePackageVersions, bundleData, directStrings );
 	}
 
 	//
@@ -147,6 +148,10 @@ public class TestTransformManifest {
 		return bundleUpdates;
 	}
 
+	public Map<String, String> getDirectStrings() {
+		return Collections.emptyMap();
+	}
+
 	public ManifestActionImpl jakartaManifestAction;
 
 	public ManifestActionImpl getJakartaManifestAction() {
@@ -157,7 +162,8 @@ public class TestTransformManifest {
 				logger,
 				new InputBufferImpl(),
 				new SelectionRuleImpl( logger, getIncludes(), getExcludes() ),
-				new SignatureRuleImpl( logger, getPackageRenames(), getPackageVersions(), getBundleUpdates() ),
+				new SignatureRuleImpl( logger,
+					getPackageRenames(), getPackageVersions(), getBundleUpdates(), getDirectStrings() ),
 				ManifestActionImpl.IS_MANIFEST );
 		}
 		return jakartaManifestAction;
@@ -173,7 +179,7 @@ public class TestTransformManifest {
 				logger,
 				new InputBufferImpl(),
 				new SelectionRuleImpl( logger, getIncludes(), getExcludes() ),
-				new SignatureRuleImpl( logger, getPackageRenames(), getPackageVersions(), null ),
+				new SignatureRuleImpl( logger, getPackageRenames(), getPackageVersions(), null, null ),
 				ManifestActionImpl.IS_FEATURE );
 		}
 
@@ -461,7 +467,7 @@ public class TestTransformManifest {
 				logger,
 				new InputBufferImpl(),
 				new SelectionRuleImpl( logger, getIncludes(), getExcludes() ), 
-				new SignatureRuleImpl( logger, getPackageRenames(), getPackageVersions(), null ),
+				new SignatureRuleImpl( logger, getPackageRenames(), getPackageVersions(), null, null ),
 				ManifestActionImpl.IS_MANIFEST );
 		}
 
@@ -504,7 +510,6 @@ public class TestTransformManifest {
 
 		
 		final String TEXT = "=abc.defgh,ijklm;nopqrs$tuv wxyz= ";
-		int textLen = TEXT.length();
 		int matchStart;
 		int keyLen;
 		

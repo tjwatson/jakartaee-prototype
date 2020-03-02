@@ -57,12 +57,9 @@ public class ServiceConfigChangesImpl extends ChangesImpl implements ServiceConf
 	@Override
 	public void displayChanges(PrintStream printStream, String inputPath, String outputPath) {
 		printStream.printf(
-			"Input  [ %s ] as [ %s ]\n",
-	       	getInputResourceName(), inputPath);
+			"Input  [ %s ] as [ %s ]\n", getInputResourceName(), inputPath);
 		printStream.printf(
-			"Output [ %s ] as [ %s ]\n",
-			getOutputResourceName(), outputPath);
-
+			"Output [ %s ] as [ %s ]\n", getOutputResourceName(), outputPath);
 		printStream.printf( "Replacements [ %s ]\n",
 			getChangedProviders() );
 	}

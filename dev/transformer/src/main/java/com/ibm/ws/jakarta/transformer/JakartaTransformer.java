@@ -2,7 +2,6 @@ package com.ibm.ws.jakarta.transformer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URI;
@@ -171,7 +170,7 @@ public class JakartaTransformer {
     public static final String INPUT_GROUP = "input";
     public static final String LOGGING_GROUP = "logging";
 
-    public static final String DEFAULT_SELECTIONS_REFERENCE = "jakarta-selections.properties";
+    // public static final String DEFAULT_SELECTIONS_REFERENCE = "jakarta-selections.properties";
     public static final String DEFAULT_RENAMES_REFERENCE = "jakarta-renames.properties";
     public static final String DEFAULT_VERSIONS_REFERENCE = "jakarta-versions.properties";
     public static final String DEFAULT_BUNDLES_REFERENCE = "jakarta-bundles.properties";
@@ -193,6 +192,8 @@ public class JakartaTransformer {
         RULES_VERSIONS("tv", "versions", "Transformation package versions URL",
             OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
         RULES_BUNDLES("tb", "bundles", "Transformation bundle updates URL",
+            OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
+        RULES_DIRECT("td", "direct", "Transformation direct string replacements",
             OptionSettings.HAS_ARG, !OptionSettings.IS_REQUIRED, OptionSettings.NO_GROUP),
 
         INVERT("i", "invert", "Invert transformation rules",
@@ -320,40 +321,31 @@ public class JakartaTransformer {
     protected CommandLine getParsedArgs() {
         return parsedArgs;
     }
-    
-    /**
-     * The input file name is the first command line argument
-     * and is required.
-     */
+
     protected String getInputFileNameFromCommandLine() {
-    	String[] useArgs = parsedArgs.getArgs();
-    	if ( useArgs != null ) {
-        	if (useArgs.length > 0) {
-        		return useArgs[0];
-        	} 
-    	}
-    	return null;
-    }
-    
-    /**
-     * The output file name is the second command line argument
-     * and is optional.  If not specified, a default output file name
-     * is created based on the input file name.
-     */
-    protected String getOutputFileNameFromCommandLine() {
         String[] useArgs = parsedArgs.getArgs();
         if ( useArgs != null ) {
-            if (useArgs.length > 1) {
-            	return useArgs[1];
-            }
+            if ( useArgs.length > 0 ) {
+                return useArgs[0]; // First argument
+            } 
         }
         return null;
     }
-    
+
+    protected String getOutputFileNameFromCommandLine() {
+        String[] useArgs = parsedArgs.getArgs();
+        if ( useArgs != null ) {
+            if ( useArgs.length > 1 ) {
+                return useArgs[1]; // Second argument
+            } 
+        }
+        return null;
+    }
+
     protected boolean hasOption(AppOption option) {
         return getParsedArgs().hasOption( option.getShortTag() );
     }
-    
+
     protected String getOptionValue(AppOption option) {
         CommandLine useParsedArgs = getParsedArgs();
         String useShortTag = option.getShortTag();
@@ -395,32 +387,57 @@ public class JakartaTransformer {
 
     //
 
-    protected UTF8Properties loadProperties(AppOption ruleOption, String defaultReference) throws IOException, URISyntaxException {
+    protected UTF8Properties loadProperties(AppOption ruleOption) throws IOException, URISyntaxException {
+        String rulesReference = getOptionValue(ruleOption);
 
-    	URL rulesUrl;
+        if ( rulesReference == null ) {
+        	info("Skipping option [ %s ]\n", ruleOption);
+        	return FileUtils.createProperties();
+        } else {
+        	return loadExternalProperties(ruleOption, rulesReference);
+        }
+    }
+
+    protected UTF8Properties loadProperties(AppOption ruleOption, String defaultReference)
+    	throws IOException, URISyntaxException {
+
         String rulesReference = getOptionValue(ruleOption);
         if ( rulesReference != null ) {
-            info("Using external [ %s ]: [ %s ]\n", ruleOption, rulesReference);
-            URI currentDirectoryUri = IO.work.toURI();
-            rulesUrl = URIUtil.resolve(currentDirectoryUri, rulesReference).toURL();
-            info("External [ %s ] URL [ %s ]\n", ruleOption, rulesUrl);
+        	return loadExternalProperties(ruleOption, rulesReference);
         } else {
-            rulesReference = defaultReference;
-            info("Using internal [ %s ]: [ %s ]\n", ruleOption, rulesReference);
-            rulesUrl = getClass().getResource(rulesReference);
+        	return loadDefaultProperties(ruleOption, defaultReference);
+        }
+    }
+
+    protected UTF8Properties loadDefaultProperties(AppOption ruleOption, String defaultReference)
+        	throws IOException {
+
+            info("Using internal [ %s ]: [ %s ]\n", ruleOption, defaultReference);
+            URL rulesUrl = getClass().getResource(defaultReference);
             if ( rulesUrl == null ) {
-        		info("Default [ %s ] were not found [ %s ]", AppOption.RULES_SELECTIONS, rulesReference);
+        		info("Default [ %s ] were not found [ %s ]\n", AppOption.RULES_SELECTIONS, defaultReference);
         		return null;
             } else {
                 info("Default [ %s ] URL [ %s ]\n", ruleOption, rulesUrl);
             }
+            return FileUtils.loadProperties(rulesUrl);
         }
 
-        try ( InputStream rulesStream = rulesUrl.openStream() ) {
-            UTF8Properties properties = new UTF8Properties();
-            properties.load(rulesStream);
-            return properties;
+        protected UTF8Properties loadExternalProperties(AppOption ruleOption, String externalReference)
+        	throws URISyntaxException, IOException {
+
+        	info("Using external [ %s ]: [ %s ]\n", ruleOption, externalReference);
+        	URI currentDirectoryUri = IO.work.toURI();
+        	URL rulesUrl = URIUtil.resolve(currentDirectoryUri, externalReference).toURL();
+        	info("External [ %s ] URL [ %s ]\n", ruleOption, rulesUrl);
+
+        	return FileUtils.loadProperties(rulesUrl);
         }
+
+    //
+
+    public TransformOptions getTransformOptions() {
+        return new TransformOptions();
     }
 
     public class TransformOptions {
@@ -434,6 +451,7 @@ public class JakartaTransformer {
     	public Map<String, String> packageRenames;
     	public Map<String, String> packageVersions;
     	public Map<String, BundleData> bundleUpdates;
+    	public Map<String, String> directStrings;
 
     	public CompositeActionImpl rootAction;
     	public ActionImpl acceptedAction;
@@ -488,12 +506,13 @@ public class JakartaTransformer {
     		}
     		return buffer;
     	}
-    	
+
     	public boolean setRules() throws IOException, URISyntaxException, IllegalArgumentException {
-    		UTF8Properties selectionProperties = loadProperties(AppOption.RULES_SELECTIONS, DEFAULT_SELECTIONS_REFERENCE);
+    		UTF8Properties selectionProperties = loadProperties(AppOption.RULES_SELECTIONS);
     		UTF8Properties renameProperties = loadProperties(AppOption.RULES_RENAMES, DEFAULT_RENAMES_REFERENCE);
     		UTF8Properties versionProperties = loadProperties(AppOption.RULES_VERSIONS, DEFAULT_VERSIONS_REFERENCE);
     		UTF8Properties updateProperties = loadProperties(AppOption.RULES_BUNDLES, DEFAULT_BUNDLES_REFERENCE);
+    		UTF8Properties directProperties = loadProperties(AppOption.RULES_DIRECT);
 
         	invert = hasOption(AppOption.INVERT);
 
@@ -529,7 +548,9 @@ public class JakartaTransformer {
         	} else {
         		info("Bundle identities will not be updated\n");
         	}
-        	
+
+        	directStrings = JakartaTransformProperties.getDirectStrings(directProperties);
+
         	return ( packageRenames != null );
     	}
 
@@ -599,6 +620,15 @@ public class JakartaTransformer {
         			}
     			}
     		}
+
+      		logStream.println("Direct strings:");
+    		if ( directStrings.isEmpty() ) {
+    			logStream.println("  [ ** NONE ** ]");
+    		} else {
+    			for ( Map.Entry<String, String> directEntry : directStrings.entrySet() ) {
+    				logStream.println( "  [ " + directEntry.getKey() + " ]: [ " + directEntry.getValue() + "]");
+    			}
+    		}
     	}
 
     	private SelectionRuleImpl selectionRules;
@@ -618,7 +648,8 @@ public class JakartaTransformer {
     		if ( signatureRules == null ) {
     			signatureRules =  new SignatureRuleImpl(
         			getLogger(),
-        			packageRenames, packageVersions, bundleUpdates);
+        			packageRenames, packageVersions, bundleUpdates,
+        			directStrings);
     		}
     		return signatureRules;
     	}
@@ -631,7 +662,7 @@ public class JakartaTransformer {
             }
 
             inputName = FileUtils.normalize(useInputName);
-            inputFile = new File(inputName);
+			inputFile = new File(inputName);
             inputPath = inputFile.getAbsolutePath();
 
             if ( !inputFile.exists() ) {
@@ -646,58 +677,94 @@ public class JakartaTransformer {
 
         public static final String OUTPUT_PREFIX = "output_";
 
+
+//      info("Output file not specified.\n");
+//
+//      final String OUTPUT_PREFIX = "output_";
+//      String inputFileName = getInputFileName();
+//      int indexOfLastSlash = inputFileName.lastIndexOf('/');
+//      if (indexOfLastSlash == -1 ) {
+//          return OUTPUT_PREFIX + inputFileName; 
+//      } else {
+//          return inputFileName.substring(0, indexOfLastSlash+1) + OUTPUT_PREFIX + inputFileName.substring(indexOfLastSlash+1);
+//      }
+
         public boolean setOutput() {
         	String useOutputName = getOutputFileNameFromCommandLine();
 
-        	if ( useOutputName != null ) {
-        		useOutputName = FileUtils.normalize(useOutputName);
-        	} else {
-        		info("Output file not specified.\n");
+        	boolean isExplicit;
 
+        	if ( isExplicit = (useOutputName != null) ) {
+        		useOutputName = FileUtils.normalize(useOutputName);
+
+        	} else {
         		int indexOfLastSlash = inputName.lastIndexOf('/');
         		if ( indexOfLastSlash == -1 ) {
-        			useOutputName =
-        				OUTPUT_PREFIX + inputName;
-
+        			useOutputName = OUTPUT_PREFIX + inputName;
         		} else {
-        			useOutputName =
-        				inputName.substring(0, indexOfLastSlash+1) +
-        				OUTPUT_PREFIX +
-        				inputName.substring(indexOfLastSlash+1);
+        			String inputPrefix = inputName.substring( 0, indexOfLastSlash + 1 ); 
+        			String inputSuffix = inputName.substring( indexOfLastSlash + 1 ); 
+        			useOutputName = inputPrefix + OUTPUT_PREFIX + inputSuffix;
         		}
         	}
-        	outputName = useOutputName;
-            outputFile = new File(outputName);
-            outputPath = outputFile.getAbsolutePath();
 
-            allowOverwrite = hasOption(AppOption.OVERWRITE);
-                     
-            // Special case.  If input file is a file, and output file is an existing directory.
-            // Then write the output file to the directory, using the default output file name
-            if ( outputFile.exists()) {
-                if (inputFile.isFile() && outputFile.isDirectory()) {
-                    outputName = outputName + "/" + OUTPUT_PREFIX + FileUtils.getFileNameFromPath(inputName);
-                    outputFile = new File(outputName);
-                    outputPath = outputFile.getAbsolutePath();
-                }
+        	File useOutputFile = new File(useOutputName);
+        	String useOutputPath = useOutputFile.getAbsolutePath();
+
+        	boolean putIntoDirectory;
+
+            if ( putIntoDirectory = (inputFile.isFile() && useOutputFile.isDirectory()) ) {
+            	useOutputName = useOutputName + '/' + inputName;
+            	if ( isVerbose ) {
+            		info("Output generated using input name and output directory [ %s ]\n", useOutputName);
+            	}
+
+            	useOutputFile = new File(useOutputName);
+            	useOutputPath = useOutputFile.getAbsolutePath();
             }
 
-            if ( outputFile.exists() ) {
-                
-            	if ( allowOverwrite ) {
-                    info("Output exists and will be overwritten [ %s ]\n", outputPath);
+            String outputCase;
+            if ( isExplicit ) {
+            	if ( putIntoDirectory ) {
+            		outputCase = "Explicit directory";
             	} else {
-            		error("Output already exists [ %s ]\n", outputPath);
+            		outputCase = "Explicit";
+            	}
+            } else {
+            	if ( putIntoDirectory ) {
+            		outputCase = "Directory generated from input";
+            	} else {
+            		outputCase = "Generated from input";
+            	}
+            }
+
+            info("Output    [ %s ] (%s)\n", useOutputName, outputCase);
+            info("          [ %s ]\n", useOutputPath);
+
+            allowOverwrite = hasOption(AppOption.OVERWRITE);
+            if ( allowOverwrite) {
+            	info("Overwrite of output is enabled\n");
+            }
+
+            if ( useOutputFile.exists() ) {
+            	if ( allowOverwrite ) {
+                    info("Output exists and will be overwritten [ %s ]\n", useOutputPath);
+            	} else {
+            		error("Output already exists [ %s ]\n", useOutputPath);
             		return false;
             	}
             } else {
             	if ( allowOverwrite ) {
-                    info("Overwritten specified, but output does not exist");
+            		if ( isVerbose ) {
+            			info("Overwritten specified, but output [ %s ] does not exist\n", useOutputPath);
+            		}
             	}
             }
 
-            info("Output    [ %s ]\n", outputName);
-            info("          [ %s ]\n", outputPath);
+            outputName = useOutputName;
+            outputFile = useOutputFile;
+            outputPath = useOutputPath;
+
             return true;
         }
 
@@ -738,6 +805,7 @@ public class JakartaTransformer {
 
         		// Jar actions know about all actions except directory actions and jar actions.
         		// TODO: Should jars be allowed to nest other archives?
+
         		jarAction.addAction(classAction);
         		jarAction.addAction(javaAction);
         		jarAction.addAction(serviceConfigAction);
@@ -753,7 +821,6 @@ public class JakartaTransformer {
 
         public boolean acceptAction() {
         	String actionName = getOptionValue(AppOption.FILE_TYPE);
-
         	if ( actionName != null ) {
         		for ( ActionImpl action : getRootAction().getActions() ) {
         			if ( action.getActionType().matches(actionName) ) {
@@ -762,16 +829,16 @@ public class JakartaTransformer {
         				return true;
         			}
         		}
-        		error("No match for forced action [ %s ]", actionName);
+        		error("No match for forced action [ %s ]\n", actionName);
         		return false;
 
         	} else {
         		acceptedAction = getRootAction().acceptAction(inputName,  inputFile);
         		if ( acceptedAction == null ) {
-        			error("No action selected for input [ %s ]", inputName);
+        			error("No action selected for input [ %s ]\n", inputName);
         			return false;
         		} else {
-        			info("Action selected for input [ %s ]: %s", inputName, acceptedAction.getName());
+        			info("Action selected for input [ %s ]: %s\n", inputName, acceptedAction.getName());
         			return true;
         		}
         	}
@@ -788,14 +855,6 @@ public class JakartaTransformer {
         }
     }
 
-    /**
-     * For test purposes
-     * @return
-     */
-    public TransformOptions getTransformOptions() {
-        return new TransformOptions();
-    }
-    
     public int run() {
         try {
             setParsedArgs();

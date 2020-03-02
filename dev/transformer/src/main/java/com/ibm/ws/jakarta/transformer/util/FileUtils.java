@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+
+import aQute.lib.utf8properties.UTF8Properties;
 
 public class FileUtils {
 
@@ -175,6 +178,7 @@ public class FileUtils {
 	}
 
 	//
+
 	public static final char SLASH = '/';
 
 	public static String normalize(String path) {
@@ -184,13 +188,18 @@ public class FileUtils {
 			return path;
 		}
 	}
-	
-	public static String getFileNameFromPath(String path) {
-	    String normalizedPath = normalize(path);
-	    int lastSlashIndex = normalizedPath.lastIndexOf(SLASH);
-	    if (lastSlashIndex != -1) {
-	       return path.substring(lastSlashIndex + 1); 
-	    }
-	    return path;
+
+	//
+
+	public static UTF8Properties loadProperties(URL url) throws IOException {
+		try ( InputStream stream = url.openStream() ) {
+			UTF8Properties properties = createProperties();
+			properties.load(stream);
+			return properties;
+		}
+    }
+
+	public static UTF8Properties createProperties() {
+		return new UTF8Properties();
 	}
 }

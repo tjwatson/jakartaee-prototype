@@ -244,6 +244,10 @@ public abstract class ActionImpl implements Action {
 		return getSignatureRule().transform(type);
 	}
 
+	public String transformDirectString(String initialValue) {
+		return getSignatureRule().getDirectString(initialValue);
+	}
+	
 	//
 
 	public abstract String getAcceptExtension();
@@ -444,6 +448,26 @@ public abstract class ActionImpl implements Action {
 	public abstract ByteData apply(String inputName, byte[] inputBytes, int inputLength) 
 		throws JakartaTransformException;
 
+    @Override
+	public void apply(String inputName, File inputFile, File outputFile)
+		throws JakartaTransformException {
+
+		long inputLength = inputFile.length();
+        verbose("Input [ %s ] Length [ %s ]\n", inputName, inputLength);
+
+		InputStream inputStream = openInputStream(inputFile);
+		try {
+			OutputStream outputStream = openOutputStream(outputFile);
+			try {
+				apply(inputName, inputStream, inputLength, outputStream);
+			} finally {
+				closeOutputStream(outputFile, outputStream);
+			}
+		} finally {
+			closeInputStream(inputFile, inputStream);
+		}
+	}
+
 	//
 
     protected InputStream openInputStream(File inputFile)
@@ -483,39 +507,14 @@ public abstract class ActionImpl implements Action {
     		outputStream.close();
     	} catch ( IOException e ) {
         	throw new JakartaTransformException("Failed to close output [ " + outputFile.getAbsolutePath() + " ]", e);
-        }        		
+        }
     }
 
-    @Override
-	public void apply(String inputName, File inputFile, File outputFile)
-		throws JakartaTransformException {
+    //
 
-		long inputLength = inputFile.length();
-        verbose("Input [ %s ] Length [ %s ]\n", inputName, inputLength);
-
-		InputStream inputStream = openInputStream(inputFile);
-		try {
-			OutputStream outputStream = openOutputStream(outputFile);
-			try {
-				apply(inputName, inputStream, inputLength, outputStream);
-			} finally {
-				closeOutputStream(outputFile, outputStream);
-			}
-		} finally {
-			closeInputStream(inputFile, inputStream);
-		}
-	}
-	
 	 /**
      * Checks the character before and after a match to verify that the match
      * is NOT a subset of a larger package, and thus not really a match.
-     *
-     * @param text
-     * @param textLimit
-     * @param lastMatchEnd
-     * @param matchStart
-     * @param keyLen
-     * @return
      */
     protected static boolean isTruePackageMatch(String text, int matchStart, int keyLen ) {
 //        System.out.println("isTruePackageMatch:\n" 
@@ -523,7 +522,6 @@ public abstract class ActionImpl implements Action {
 //                           + "key[" + text.substring(matchStart, matchStart + keyLen) + "]\n"
 //                           + "tail[" + text.substring(matchStart + keyLen)
 //                           + "*************");
-        
 
         int textLength = text.length();
               
@@ -533,8 +531,8 @@ public abstract class ActionImpl implements Action {
                 return false;
             }
         }
-        
-        int matchEnd = matchStart + keyLen;        
+
+        int matchEnd = matchStart + keyLen;
         if ( textLength > matchEnd ) {
 
             char charAfterMatch = text.charAt(matchEnd);
