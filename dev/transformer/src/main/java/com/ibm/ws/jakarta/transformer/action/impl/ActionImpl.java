@@ -543,13 +543,15 @@ public abstract class ActionImpl implements Action {
                 return false;
             }
             
-            // If the next char is dot, check the character after the dot.  An upper case letter indicates the start of a 
-            // class name and thus the end of the package name which indicates a match.
+            // If the next char is dot, check the character after the dot.  Assume an upper case letter indicates the start of a 
+            // class name and thus the end of the package name which indicates a match. ( This means this doesn't work 
+            // for package names that do not follow the convention of using lower case characters ).            
             // If lower case, then it indicates we are looking at a larger package name, and thus not a match.
+            // If the character after the dot is a number, also assume the number is a continuation of the package name.
             if (charAfterMatch == '.') {
                 if ( textLength > (matchEnd+1) )  {
                     char charAfterDot = text.charAt(matchEnd+1);
-                    if ( Character.isLowerCase(charAfterDot) ) {
+                    if ( Character.isLowerCase(charAfterDot) || Character.isDigit(charAfterDot) ) {
                         return false;
                     }
                 }
