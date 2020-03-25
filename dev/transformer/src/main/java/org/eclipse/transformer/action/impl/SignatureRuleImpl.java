@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.transformer.action.BundleData;
 import org.eclipse.transformer.action.SignatureRule;
@@ -91,16 +93,23 @@ public class SignatureRuleImpl implements SignatureRule {
 		} else {
 			useBundleUpdates = Collections.emptyMap();
 		}
-		this.bundleUpdates = useBundleUpdates;
-		
-        Map<String, Map<String, String>> mapOfMaps;
+		this.bundleUpdates = useBundleUpdates;	
+        
+        Map<String,  Map<String, String>> specificXmlMap = new HashMap<String,  Map<String, String>>();
+        Map<Pattern, Map<String, String>> wildCardXmlMap = new HashMap<Pattern, Map<String, String>>();
+        for ( Map.Entry<String, Map<String, String>>entry : specificXmlFileUpdates.entrySet() ) {
+            String key = entry.getKey();  
 
-        if (specificXmlFileUpdates != null ) {
-            mapOfMaps = new HashMap<String, Map<String, String>>(specificXmlFileUpdates);
-        } else {
-            mapOfMaps = Collections.emptyMap();
+            if ((key.indexOf('?') != -1) || (key.indexOf('*') != -1)) {
+                key = key.replace("?", ".?").replace("*", ".*?");
+                Pattern p = Pattern.compile(key);
+                wildCardXmlMap.put(p, entry.getValue());
+            } else {
+                specificXmlMap.put(key, entry.getValue());
+            }
         }
-        this.specificXmlFileUpdates = mapOfMaps;		
+        this.specificXmlFileUpdates = specificXmlMap;
+        this.wildCardXmlFileUpdates = wildCardXmlMap;
 
 		Map<String, String> useDirectStrings;
 		if ( directStrings == null ) {
@@ -144,6 +153,7 @@ public class SignatureRuleImpl implements SignatureRule {
 	// 
     
     public final Map<String, Map<String, String>> specificXmlFileUpdates;
+    public final Map<Pattern, Map<String, String>> wildCardXmlFileUpdates;
 	
 	//
 
@@ -273,25 +283,33 @@ public class SignatureRuleImpl implements SignatureRule {
 		}
 	}
 	
+	/**
+	 * @param p a compiled pattern
+	 * @param input name to try to match against pattern p
+	 */
+	public static boolean matches(Pattern p, CharSequence input) {
+        Matcher m = p.matcher(input);
+        return m.matches();
+    }
+	
 	public Map<String, String> getXmlRuleFileName(String inputFileName) {
-        String fileName = FileUtils.getFileNameFromFullyQualifiedFileName(inputFileName); 
-        
-        if (fileName.toLowerCase().endsWith(".xml")) {
-            for (String key : specificXmlFileUpdates.keySet()) {
-                
-                // Performance consideration:  don't do regular expression "matches" call unnecessarily
-                if ((key.indexOf('?') != -1) || (key.indexOf('*') != -1)) {
-                    if (fileName.matches(key.replace("?", ".?").replace("*", ".*?"))) {
-                        return specificXmlFileUpdates.get(key);
-                    }
-                } else {
-                    if (fileName.equals(key)) {
-                        return specificXmlFileUpdates.get(key);
-                    }
-                }
-            }
-        }
-        return null;
+	    String fileName = FileUtils.getFileNameFromFullyQualifiedFileName(inputFileName); 
+
+	    if (fileName.toLowerCase().endsWith(".xml")) {
+
+	        // First check for a specific match. Not considering wildcard.
+	        Map<String, String> rulesFile = specificXmlFileUpdates.get(fileName);
+	        if (rulesFile != null) {
+	            return rulesFile;
+	        }
+
+	        for (Pattern p : wildCardXmlFileUpdates.keySet()) {
+	            if (matches(p, fileName)) {
+	                return wildCardXmlFileUpdates.get(p);
+	            }
+	        }
+	    }
+	    return null;
 	}
 	
     public String replaceText(String inputFileName, String text) { 
