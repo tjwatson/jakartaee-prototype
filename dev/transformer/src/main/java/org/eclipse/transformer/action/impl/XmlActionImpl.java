@@ -462,7 +462,7 @@ public class XmlActionImpl extends ActionImpl {
 //		}
 	}
 	
-	protected void debug(String s) {
-	    System.out.println(s);
-	}
+//	protected void debug(String s) {
+//	    System.out.println(s);
+//	}
 }
