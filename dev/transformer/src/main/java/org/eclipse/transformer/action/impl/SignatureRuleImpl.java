@@ -292,20 +292,20 @@ public class SignatureRuleImpl implements SignatureRule {
         return m.matches();
     }
 	
-	public Map<String, String> getXmlRuleFileName(String inputFileName) {
+	public Map<String, String> getXmlRuleMap(String inputFileName) {
 	    String fileName = FileUtils.getFileNameFromFullyQualifiedFileName(inputFileName); 
 
 	    if (fileName.toLowerCase().endsWith(".xml")) {
 
 	        // First check for a specific match. Not considering wildcard.
-	        Map<String, String> rulesFile = specificXmlFileUpdates.get(fileName);
-	        if (rulesFile != null) {
-	            return rulesFile;
+	        Map<String, String> ruleMap = specificXmlFileUpdates.get(fileName);
+	        if (ruleMap != null) {
+	            return ruleMap;
 	        }
 
-	        for (Pattern p : wildCardXmlFileUpdates.keySet()) {
-	            if (matches(p, fileName)) {
-	                return wildCardXmlFileUpdates.get(p);
+	        for ( Map.Entry<Pattern, Map<String, String>> updateEntry : wildCardXmlFileUpdates.entrySet() ) {
+	            if ( matches(updateEntry.getKey(), fileName) ) {
+	                return updateEntry.getValue();
 	            }
 	        }
 	    }
@@ -314,7 +314,7 @@ public class SignatureRuleImpl implements SignatureRule {
 	
     public String replaceText(String inputFileName, String text) { 
         
-        Map<String, String> substitutions = getXmlRuleFileName(inputFileName);       
+        Map<String, String> substitutions = getXmlRuleMap(inputFileName);       
         
         String initialText = text;
 
